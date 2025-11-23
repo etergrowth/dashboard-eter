@@ -24,9 +24,11 @@ const mapOptions = {
 };
 
 export function ClientMap() {
-  const { isLoaded } = useJsApiLoader({
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: googleMapsApiKey || '',
+    libraries: ['places'],
   });
 
   const { data: clients, isLoading } = useClients();
@@ -63,6 +65,42 @@ export function ClientMap() {
   const onUnmount = () => {
     setMap(null);
   };
+
+  // Show error if API key is missing or there's a load error
+  if (!googleMapsApiKey || loadError) {
+    return (
+      <div className="glass-panel p-12 rounded-xl text-center">
+        <MapPin className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">
+          Google Maps não configurado
+        </h3>
+        <p className="text-gray-400 mb-4">
+          {!googleMapsApiKey
+            ? 'A chave da API do Google Maps não está configurada.'
+            : 'Erro ao carregar o Google Maps. Verifique a chave da API.'}
+        </p>
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-left max-w-md mx-auto">
+          <p className="text-sm text-gray-300 mb-2">
+            Para configurar, adicione no arquivo <code className="bg-white/10 px-2 py-1 rounded">.env</code>:
+          </p>
+          <code className="text-xs text-blue-400 block bg-black/20 p-2 rounded">
+            VITE_GOOGLE_MAPS_API_KEY=sua_chave_aqui
+          </code>
+          <p className="text-xs text-gray-500 mt-3">
+            Obtenha uma chave em:{' '}
+            <a
+              href="https://console.cloud.google.com/google/maps-apis"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              Google Cloud Console
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoaded || isLoading) {
     return (

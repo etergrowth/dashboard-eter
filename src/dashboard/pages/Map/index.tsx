@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Map as MapIcon, Plus } from 'lucide-react';
 import { ClientMap } from './ClientMap';
+import { ClientForm } from '../CRM/ClientForm';
 
 export function Map() {
   const [showAddClient, setShowAddClient] = useState(false);
@@ -28,6 +29,9 @@ export function Map() {
 
       {/* Client Map */}
       <ClientMap />
+
+      {/* Client Form Modal */}
+      {showAddClient && <ClientForm onClose={() => setShowAddClient(false)} />}
 
       {/* Instructions */}
       <div className="glass-panel p-6 rounded-xl">

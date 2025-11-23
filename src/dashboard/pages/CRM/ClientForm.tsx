@@ -1,29 +1,31 @@
 import { useState } from 'react';
 import { X, Save, Loader2, MapPin } from 'lucide-react';
-import { useCreateClient } from '../../hooks/useClients';
-import type { ClientInsert } from '../../../types';
+import { useCreateClient, useUpdateClient } from '../../hooks/useClients';
+import type { ClientInsert, Client } from '../../../types';
 
 interface ClientFormProps {
   onClose: () => void;
+  client?: Client;
 }
 
-export function ClientForm({ onClose }: ClientFormProps) {
+export function ClientForm({ onClose, client }: ClientFormProps) {
   const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [formData, setFormData] = useState<Partial<ClientInsert>>({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    address: '',
-    city: '',
-    postal_code: '',
-    country: 'Portugal',
-    status: 'lead',
-    priority: 'medium',
-    probability: 0,
-    value: undefined,
-    notes: '',
+    name: client?.name || '',
+    email: client?.email || '',
+    phone: client?.phone || '',
+    company: client?.company || '',
+    address: client?.address || '',
+    city: client?.city || '',
+    postal_code: client?.postal_code || '',
+    country: client?.country || 'Portugal',
+    status: client?.status || 'lead',
+    priority: client?.priority || 'medium',
+    probability: client?.probability || 0,
+    value: client?.value || undefined,
+    notes: client?.notes || '',
   });
 
   const handleChange = (
@@ -36,6 +38,12 @@ export function ClientForm({ onClose }: ClientFormProps) {
   const geocodeAddress = async () => {
     if (!formData.address || !formData.city) return null;
 
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn('Google Maps API key not configured. Geocoding will be skipped.');
+      return null;
+    }
+
     const fullAddress = `${formData.address}, ${formData.city}, ${formData.country}`;
 
     try {
@@ -43,7 +51,7 @@ export function ClientForm({ onClose }: ClientFormProps) {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
           fullAddress
-        )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+        )}&key=${apiKey}`
       );
 
       const data = await response.json();
@@ -54,6 +62,8 @@ export function ClientForm({ onClose }: ClientFormProps) {
           latitude: location.lat,
           longitude: location.lng,
         };
+      } else {
+        console.warn('Geocoding failed:', data.status, data.error_message);
       }
     } catch (error) {
       console.error('Geocoding error:', error);
@@ -73,31 +83,62 @@ export function ClientForm({ onClose }: ClientFormProps) {
       coordinates = await geocodeAddress();
     }
 
-    const clientData: ClientInsert = {
-      name: formData.name!,
-      email: formData.email || null,
-      phone: formData.phone || null,
-      company: formData.company || null,
-      address: formData.address || null,
-      city: formData.city || null,
-      postal_code: formData.postal_code || null,
-      country: formData.country || 'Portugal',
-      latitude: coordinates?.latitude || null,
-      longitude: coordinates?.longitude || null,
-      status: formData.status || 'lead',
-      priority: formData.priority || 'medium',
-      probability: Number(formData.probability) || 0,
-      value: formData.value ? Number(formData.value) : null,
-      notes: formData.notes || null,
-      tags: null,
-      user_id: '', // Will be set by the hook
-    };
+    if (client) {
+      // Update existing client
+      const updateData = {
+        name: formData.name!,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        postal_code: formData.postal_code || null,
+        country: formData.country || 'Portugal',
+        latitude: coordinates?.latitude || client.latitude,
+        longitude: coordinates?.longitude || client.longitude,
+        status: formData.status || 'lead',
+        priority: formData.priority || 'medium',
+        probability: Number(formData.probability) || 0,
+        value: formData.value ? Number(formData.value) : null,
+        notes: formData.notes || null,
+      };
 
-    createClient.mutate(clientData, {
-      onSuccess: () => {
-        onClose();
-      },
-    });
+      updateClient.mutate(
+        { id: client.id, ...updateData },
+        {
+          onSuccess: () => {
+            onClose();
+          },
+        }
+      );
+    } else {
+      // Create new client
+      const clientData: ClientInsert = {
+        name: formData.name!,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        postal_code: formData.postal_code || null,
+        country: formData.country || 'Portugal',
+        latitude: coordinates?.latitude || null,
+        longitude: coordinates?.longitude || null,
+        status: formData.status || 'lead',
+        priority: formData.priority || 'medium',
+        probability: Number(formData.probability) || 0,
+        value: formData.value ? Number(formData.value) : null,
+        notes: formData.notes || null,
+        tags: null,
+        user_id: '', // Will be set by the hook
+      };
+
+      createClient.mutate(clientData, {
+        onSuccess: () => {
+          onClose();
+        },
+      });
+    }
   };
 
   return (
@@ -105,7 +146,9 @@ export function ClientForm({ onClose }: ClientFormProps) {
       <div className="glass-panel p-6 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Novo Cliente</h2>
+          <h2 className="text-2xl font-bold text-white">
+            {client ? 'Editar Cliente' : 'Novo Cliente'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
@@ -306,10 +349,10 @@ export function ClientForm({ onClose }: ClientFormProps) {
           <div className="flex items-center gap-4 pt-4">
             <button
               type="submit"
-              disabled={createClient.isPending || isGeocoding}
+              disabled={createClient.isPending || updateClient.isPending || isGeocoding}
               className="flex-1 glass-button py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 hover:bg-[#7BA8F9]/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {createClient.isPending || isGeocoding ? (
+              {createClient.isPending || updateClient.isPending || isGeocoding ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   {isGeocoding ? 'A processar endereço...' : 'A guardar...'}
@@ -317,7 +360,7 @@ export function ClientForm({ onClose }: ClientFormProps) {
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  Guardar Cliente
+                  {client ? 'Atualizar Cliente' : 'Guardar Cliente'}
                 </>
               )}
             </button>

@@ -2,23 +2,44 @@ import { useState } from 'react';
 import { Users, Plus, Search, Filter, MapPin, Phone, Mail, Building2, Trash2, Edit } from 'lucide-react';
 import { useClients, useDeleteClient } from '../../hooks/useClients';
 import { ClientForm } from './ClientForm';
+import type { Client } from '../../../types';
 
 export function CRM() {
   const { data: clients, isLoading } = useClients();
   const deleteClient = useDeleteClient();
   const [showForm, setShowForm] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
-  const filteredClients = clients?.filter((client) =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClients = clients?.filter((client) => {
+    const matchesSearch =
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || client.priority === priorityFilter;
+    
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Tem a certeza que deseja eliminar ${name}?`)) {
       deleteClient.mutate(id);
     }
+  };
+
+  const handleEdit = (client: Client) => {
+    setEditingClient(client);
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingClient(undefined);
   };
 
   const getStatusColor = (status: string) => {
@@ -62,7 +83,10 @@ export function CRM() {
           </p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            setEditingClient(undefined);
+            setShowForm(true);
+          }}
           className="glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition"
         >
           <Plus className="w-5 h-5" />
@@ -97,21 +121,75 @@ export function CRM() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Pesquisar clientes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Pesquisar clientes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition ${
+              showFilters || statusFilter !== 'all' || priorityFilter !== 'all' ? 'bg-[#7BA8F9]/20' : ''
+            }`}
+          >
+            <Filter className="w-5 h-5" />
+            Filtros
+          </button>
         </div>
-        <button className="glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition">
-          <Filter className="w-5 h-5" />
-          Filtros
-        </button>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="glass-panel p-4 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
+                >
+                  <option value="all">Todos</option>
+                  <option value="lead">Lead</option>
+                  <option value="proposal">Proposta</option>
+                  <option value="negotiation">Negociação</option>
+                  <option value="closed">Fechado</option>
+                  <option value="lost">Perdido</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Prioridade</label>
+                <select
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
+                >
+                  <option value="all">Todas</option>
+                  <option value="low">Baixa</option>
+                  <option value="medium">Média</option>
+                  <option value="high">Alta</option>
+                </select>
+              </div>
+            </div>
+            {(statusFilter !== 'all' || priorityFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setStatusFilter('all');
+                  setPriorityFilter('all');
+                }}
+                className="mt-4 text-sm text-[#7BA8F9] hover:underline"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Clients List */}
@@ -218,6 +296,7 @@ export function CRM() {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <button
+                          onClick={() => handleEdit(client)}
                           className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
                           title="Editar"
                         >
@@ -251,7 +330,10 @@ export function CRM() {
           </p>
           {!searchTerm && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setEditingClient(undefined);
+                setShowForm(true);
+              }}
               className="glass-button px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition"
             >
               <Plus className="w-5 h-5" />
@@ -262,7 +344,7 @@ export function CRM() {
       )}
 
       {/* Client Form Modal */}
-      {showForm && <ClientForm onClose={() => setShowForm(false)} />}
+      {showForm && <ClientForm onClose={handleCloseForm} client={editingClient} />}
     </div>
   );
 }
