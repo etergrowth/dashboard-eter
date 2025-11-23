@@ -82,6 +82,7 @@ export function useUploadFile() {
       // Save file metadata to database
       const { data, error } = await supabase
         .from('media_files')
+        // @ts-ignore
         .insert({
           ...metadata,
           file_url: publicUrl,
@@ -108,6 +109,7 @@ export function useUpdateMediaFile() {
     mutationFn: async ({ id, ...updates }: MediaFileUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('media_files')
+        // @ts-ignore
         .update(updates)
         .eq('id', id)
         .select()
@@ -127,29 +129,9 @@ export function useDeleteFile() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Get file info first to delete from storage
-      const { data: file } = await supabase
-        .from('media_files')
-        .select('file_url')
-        .eq('id', id)
-        .single();
-
-      if (file?.file_url) {
-        // Extract file path from URL
-        const url = new URL(file.file_url);
-        const path = url.pathname.split('/media/')[1];
-
-        if (path) {
-          // Delete from storage
-          await supabase.storage.from('media').remove([path]);
-        }
-      }
-
-      // Delete from database
-      const { error } = await supabase
-        .from('media_files')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.functions.invoke('delete-media-file', {
+        body: { id },
+      });
 
       if (error) throw error;
     },

@@ -35,3 +35,19 @@ export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
 export type InteractionType = 'call' | 'email' | 'meeting' | 'note';
 export type KanbanColumn = 'todo' | 'doing' | 'done';
+
+export interface Waypoint {
+    location: { lat: number; lng: number };
+    address: string;
+    stopover: boolean;
+}
+
+export interface Route {
+    id: string;
+    user_id: string;
+    name: string;
+    waypoints: Waypoint[];
+    total_distance: string;
+    total_duration: string;
+    created_at: string;
+}
