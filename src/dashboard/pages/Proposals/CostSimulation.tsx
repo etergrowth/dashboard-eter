@@ -13,13 +13,13 @@ interface CostItem {
   baseCost: number;
   lineTotal: number;
   lineMargin: number;
+  desiredMargin: number; // Margem desejada individual para este item
 }
 
 export function CostSimulation() {
   const { data: services, isLoading: servicesLoading } = useAllServices();
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [items, setItems] = React.useState<CostItem[]>([]);
-  const [desiredMargin, setDesiredMargin] = React.useState(40); // Margem desejada em percentagem
   const [finalSellingPrice, setFinalSellingPrice] = React.useState(0);
 
   // Calcular totais
@@ -29,9 +29,12 @@ export function CostSimulation() {
     const totalBaseCost = items.reduce((sum, item) => sum + (item.baseCost * item.hours), 0);
     const totalSoftwareCosts = items.reduce((sum, item) => sum + item.softwareCosts, 0);
     
-    // Calcular preço de venda com margem desejada
-    const costWithMargin = totalBaseCost * (1 + desiredMargin / 100);
-    const sellingPrice = costWithMargin + totalSoftwareCosts;
+    // Calcular preço de venda com margem desejada individual por item
+    const sellingPrice = items.reduce((sum, item) => {
+      const baseCostForItem = item.baseCost * item.hours;
+      const costWithMargin = baseCostForItem * (1 + (item.desiredMargin || 0) / 100);
+      return sum + costWithMargin + item.softwareCosts;
+    }, 0);
     
     return {
       totalCost,
@@ -41,7 +44,7 @@ export function CostSimulation() {
       sellingPrice,
       marginPercentage: totalBaseCost > 0 ? ((sellingPrice - totalBaseCost - totalSoftwareCosts) / totalBaseCost) * 100 : 0,
     };
-  }, [items, desiredMargin]);
+  }, [items]);
 
   // Atualizar preço de venda quando os totais mudarem
   React.useEffect(() => {
@@ -65,6 +68,7 @@ export function CostSimulation() {
       baseCost: Number(firstService.base_cost_per_hour) || 0,
       lineTotal: 0,
       lineMargin: 0,
+      desiredMargin: 40, // Margem padrão de 40%
     };
     setItems([...items, newItem]);
   };
@@ -94,6 +98,7 @@ export function CostSimulation() {
           baseCost,
           lineTotal,
           lineMargin,
+          desiredMargin: item.desiredMargin || 40, // Preservar margem desejada ou usar padrão
         };
       }
       return item;
@@ -129,6 +134,18 @@ export function CostSimulation() {
           ...item,
           softwareCosts: sc,
           lineTotal,
+        };
+      }
+      return item;
+    }));
+  };
+
+  const handleDesiredMarginChange = (itemId: string, margin: number) => {
+    setItems(items.map(item => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          desiredMargin: Math.max(0, Math.min(1000, margin)),
         };
       }
       return item;
@@ -193,7 +210,7 @@ export function CostSimulation() {
               className="border border-border rounded-lg p-4 bg-muted/5"
             >
               <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium text-card-foreground">
+                <h4 className="font-medium text-orange-600">
                   Item {index + 1}
                 </h4>
                 <button
@@ -208,13 +225,13 @@ export function CostSimulation() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Seleção de Serviço */}
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Serviço
                   </label>
                   <select
                     value={item.serviceId}
                     onChange={(e) => handleServiceChange(item.id, e.target.value)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     {services?.map((service) => (
                       <option key={service.id} value={service.id}>
@@ -226,7 +243,7 @@ export function CostSimulation() {
 
                 {/* Horas */}
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Horas
                   </label>
                   <input
@@ -235,14 +252,14 @@ export function CostSimulation() {
                     min="0"
                     value={item.hours || ''}
                     onChange={(e) => handleHoursChange(item.id, parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
 
                 {/* Custos de Software */}
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Custos Software (€)
                   </label>
                   <input
@@ -251,14 +268,14 @@ export function CostSimulation() {
                     min="0"
                     value={item.softwareCosts || ''}
                     onChange={(e) => handleSoftwareCostsChange(item.id, parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="0.00"
                   />
                 </div>
 
                 {/* Preço/Hora (editável) */}
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Preço/Hora (€)
                   </label>
                   <input
@@ -267,38 +284,63 @@ export function CostSimulation() {
                     min="0"
                     value={item.hourlyRate || ''}
                     onChange={(e) => handleHourlyRateChange(item.id, parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="0.00"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-black mt-1">
                     Base: {Math.round(item.baseCost)}€/h
                   </p>
+                </div>
+              </div>
+
+              {/* Margem Desejada (individual por item) */}
+              <div className="mt-4 bg-muted/10 rounded-lg p-4">
+                <label className="block text-sm font-medium text-black mb-2">
+                  Margem Desejada (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1000"
+                  value={item.desiredMargin || 0}
+                  onChange={(e) => handleDesiredMarginChange(item.id, parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+                <p className="text-xs text-black mt-2">
+                  Esta margem será aplicada sobre o custo base deste item para calcular o preço de venda sugerido.
+                </p>
+                <div className="mt-2 text-xs text-black">
+                  <span>Preço sugerido para este item: </span>
+                  <span className="font-semibold text-orange-600">
+                    {((item.baseCost * item.hours) * (1 + (item.desiredMargin || 0) / 100) + item.softwareCosts).toFixed(2)}€
+                  </span>
                 </div>
               </div>
 
               {/* Resumo do item */}
               <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Total Linha</p>
-                  <p className="text-sm font-semibold text-card-foreground">
+                  <p className="text-xs text-black">Total Linha</p>
+                  <p className="text-sm font-semibold text-orange-600">
                     {item.lineTotal.toFixed(2)}€
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Margem Linha</p>
-                  <p className="text-sm font-semibold text-chart-2">
+                  <p className="text-xs text-black">Margem Linha</p>
+                  <p className="text-sm font-semibold text-orange-600">
                     {item.lineMargin.toFixed(2)}€
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Custo Base</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-black">Custo Base</p>
+                  <p className="text-sm text-black">
                     {(item.baseCost * item.hours).toFixed(2)}€
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">% Margem</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-black">Margem</p>
+                  <p className="text-sm text-black">
                     {item.baseCost > 0 
                       ? (((item.hourlyRate - item.baseCost) / item.baseCost) * 100).toFixed(1)
                       : '0.0'
@@ -310,7 +352,7 @@ export function CostSimulation() {
           ))}
 
           {items.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-black">
               <p>Nenhum item adicionado ainda.</p>
               <p className="text-sm mt-2">Clique em "Adicionar Item" para começar.</p>
             </div>
@@ -318,7 +360,7 @@ export function CostSimulation() {
         </div>
 
         {/* Botão para adicionar item */}
-        <div className="mb-6">
+        <div className="mb-6 flex justify-center">
           <button
             onClick={handleAddItem}
             className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium"
@@ -328,62 +370,12 @@ export function CostSimulation() {
           </button>
         </div>
 
-        {/* Resumo e configuração de margem */}
+        {/* Resumo e preço de venda final */}
         {items.length > 0 && (
           <div className="border-t border-border pt-6 space-y-4">
-            {/* Configuração de margem desejada */}
-            <div className="bg-muted/10 rounded-lg p-4">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                Margem Desejada (%)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="1000"
-                value={desiredMargin}
-                onChange={(e) => setDesiredMargin(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Esta margem será aplicada sobre o custo base total para calcular o preço de venda sugerido.
-              </p>
-            </div>
-
-            {/* Totais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-muted/10 rounded-lg p-4">
-                <p className="text-xs text-muted-foreground mb-1">Custo Base Total</p>
-                <p className="text-lg font-semibold text-card-foreground">
-                  {totals.totalBaseCost.toFixed(2)}€
-                </p>
-              </div>
-              <div className="bg-muted/10 rounded-lg p-4">
-                <p className="text-xs text-muted-foreground mb-1">Custos Software</p>
-                <p className="text-lg font-semibold text-card-foreground">
-                  {totals.totalSoftwareCosts.toFixed(2)}€
-                </p>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-                <p className="text-xs text-muted-foreground mb-1">Preço de Venda Sugerido</p>
-                <p className="text-lg font-semibold text-primary">
-                  {totals.sellingPrice.toFixed(2)}€
-                </p>
-              </div>
-              <div className="bg-chart-2/10 rounded-lg p-4 border border-chart-2/20">
-                <p className="text-xs text-muted-foreground mb-1">Margem Total</p>
-                <p className="text-lg font-semibold text-chart-2">
-                  {(totals.sellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts).toFixed(2)}€
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  ({totals.marginPercentage.toFixed(1)}%)
-                </p>
-              </div>
-            </div>
-
             {/* Preço de venda final (editável) */}
-            <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-              <label className="block text-sm font-medium text-card-foreground mb-2">
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+              <label className="block text-sm font-medium text-black mb-2">
                 Preço de Venda Final (€)
               </label>
               <input
@@ -392,16 +384,16 @@ export function CostSimulation() {
                 min="0"
                 value={finalSellingPrice.toFixed(2)}
                 onChange={(e) => setFinalSellingPrice(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-background border border-primary/30 rounded-lg text-card-foreground text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 bg-background border border-orange-300 rounded-lg text-orange-600 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <div className="mt-2 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
+                <span className="text-black">
                   Margem final: {totals.totalBaseCost > 0 
                     ? (((finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts) / totals.totalBaseCost) * 100).toFixed(1)
                     : '0.0'
                   }%
                 </span>
-                <span className="text-chart-2 font-medium">
+                <span className="text-orange-600 font-medium">
                   Lucro: {(finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts).toFixed(2)}€
                 </span>
               </div>

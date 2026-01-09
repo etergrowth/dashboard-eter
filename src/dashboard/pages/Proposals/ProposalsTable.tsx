@@ -24,7 +24,7 @@ export function ProposalsTable() {
 
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
-  const [isExpanded, setIsExpanded] = React.useState(true);
+  const [isExpanded, setIsExpanded] = React.useState(false);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});

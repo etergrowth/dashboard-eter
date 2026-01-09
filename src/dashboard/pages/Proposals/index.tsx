@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, FileText, Trash2, Edit, X, Calculator } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Calculator } from 'lucide-react';
 import { useProposals, useDeleteProposal } from '../../hooks/useProposals';
 import { useProposalItems, useDeleteProposalItem } from '../../hooks/useProposals';
 import { ProposalForm } from './ProposalForm';
@@ -8,7 +8,7 @@ import { ServicesTable } from './ServicesTable';
 import { ProposalsTable } from './ProposalsTable';
 import { CostSimulation } from './CostSimulation';
 import type { Proposal, ProposalItem } from '../../../types';
-import { PageHeader, SearchBar, ActionButton, LoadingState, EmptyState } from '../../components/sections';
+import { PageHeader, SearchBar, ActionButton, LoadingState } from '../../components/sections';
 
 export function Proposals() {
   const { data: proposals, isLoading } = useProposals();
@@ -164,7 +164,7 @@ export function Proposals() {
         />
       ) : (
         <div className="grid gap-4">
-          {filteredProposals && filteredProposals.length > 0 ? (
+          {filteredProposals && filteredProposals.length > 0 && (
             filteredProposals.map((proposal) => (
               <div
                 key={proposal.id}
@@ -286,18 +286,6 @@ export function Proposals() {
                 </div>
               </div>
             ))
-          ) : (
-            <EmptyState
-              icon={FileText}
-              title="Nenhuma proposta encontrada"
-              action={
-                <ActionButton
-                  label="Criar primeira proposta"
-                  onClick={() => setShowForm(true)}
-                  icon={Plus}
-                />
-              }
-            />
           )}
         </div>
       )}
