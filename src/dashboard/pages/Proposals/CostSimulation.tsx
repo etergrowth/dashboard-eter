@@ -14,6 +14,7 @@ interface CostItem {
   lineTotal: number;
   lineMargin: number;
   desiredMargin: number; // Margem desejada individual para este item
+  isExpanded?: boolean;
 }
 
 export function CostSimulation() {
@@ -28,14 +29,14 @@ export function CostSimulation() {
     const totalMargin = items.reduce((sum, item) => sum + item.lineMargin, 0);
     const totalBaseCost = items.reduce((sum, item) => sum + (item.baseCost * item.hours), 0);
     const totalSoftwareCosts = items.reduce((sum, item) => sum + item.softwareCosts, 0);
-    
+
     // Calcular preço de venda com margem desejada individual por item
     const sellingPrice = items.reduce((sum, item) => {
       const baseCostForItem = item.baseCost * item.hours;
       const costWithMargin = baseCostForItem * (1 + (item.desiredMargin || 0) / 100);
       return sum + costWithMargin + item.softwareCosts;
     }, 0);
-    
+
     return {
       totalCost,
       totalMargin,
@@ -69,8 +70,15 @@ export function CostSimulation() {
       lineTotal: 0,
       lineMargin: 0,
       desiredMargin: 40, // Margem padrão de 40%
+      isExpanded: true,
     };
     setItems([...items, newItem]);
+  };
+
+  const toggleItemExpanded = (id: string) => {
+    setItems(items.map(item =>
+      item.id === id ? { ...item, isExpanded: !item.isExpanded } : item
+    ));
   };
 
   const handleRemoveItem = (id: string) => {
@@ -179,9 +187,8 @@ export function CostSimulation() {
   }
 
   return (
-    <div className={`glass-panel rounded-xl transition-all duration-300 ${
-      isExpanded ? 'p-6' : 'p-4'
-    }`}>
+    <div className={`glass-panel rounded-xl transition-all duration-300 ${isExpanded ? 'p-6' : 'p-4'
+      }`}>
       <div className={`flex items-center justify-between ${isExpanded ? 'mb-6' : 'mb-0'}`}>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -198,9 +205,8 @@ export function CostSimulation() {
       </div>
 
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
       >
         {/* Itens de custo */}
         <div className="space-y-4 mb-6">
@@ -210,9 +216,22 @@ export function CostSimulation() {
               className="border border-border rounded-lg p-4 bg-muted/5"
             >
               <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium text-orange-600">
-                  Item {index + 1}
-                </h4>
+                <button
+                  onClick={() => toggleItemExpanded(item.id)}
+                  className="flex items-center gap-2 font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                >
+                  {item.isExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                  <span>Item {index + 1}: {item.serviceName || 'Novo Serviço'}</span>
+                  {!item.isExpanded && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({item.hours}h • {item.lineTotal.toFixed(2)}€)
+                    </span>
+                  )}
+                </button>
                 <button
                   onClick={() => handleRemoveItem(item.id)}
                   className="p-2 hover:bg-destructive/10 rounded-lg transition text-destructive"
@@ -222,130 +241,136 @@ export function CostSimulation() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Seleção de Serviço */}
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">
-                    Serviço
-                  </label>
-                  <select
-                    value={item.serviceId}
-                    onChange={(e) => handleServiceChange(item.id, e.target.value)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  >
-                    {services?.map((service) => (
-                      <option key={service.id} value={service.id}>
-                        {service.name} ({Math.round(Number(service.final_hourly_rate))}€/h)
-                      </option>
-                    ))}
-                  </select>
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${item.isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+              >
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Seleção de Serviço */}
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Serviço
+                    </label>
+                    <select
+                      value={item.serviceId}
+                      onChange={(e) => handleServiceChange(item.id, e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      {services?.map((service) => (
+                        <option key={service.id} value={service.id}>
+                          {service.name} ({Math.round(Number(service.final_hourly_rate))}€/h)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Horas */}
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Horas
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={item.hours || ''}
+                      onChange={(e) => handleHoursChange(item.id, parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  {/* Custos de Software */}
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Custos Software (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.softwareCosts || ''}
+                      onChange={(e) => handleSoftwareCostsChange(item.id, parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  {/* Preço/Hora (editável) */}
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Preço/Hora (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.hourlyRate || ''}
+                      onChange={(e) => handleHourlyRateChange(item.id, parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-black mt-1">
+                      Base: {Math.round(item.baseCost)}€/h
+                    </p>
+                  </div>
                 </div>
 
-                {/* Horas */}
-                <div>
+                {/* Margem Desejada (individual por item) */}
+                <div className="mt-4 bg-muted/10 rounded-lg p-4">
                   <label className="block text-sm font-medium text-black mb-2">
-                    Horas
+                    Margem Desejada (%)
                   </label>
                   <input
                     type="number"
-                    step="0.5"
+                    step="0.1"
                     min="0"
-                    value={item.hours || ''}
-                    onChange={(e) => handleHoursChange(item.id, parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="0"
+                    max="1000"
+                    value={item.desiredMargin || 0}
+                    onChange={(e) => handleDesiredMarginChange(item.id, parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
+                  <p className="text-xs text-black mt-2">
+                    Esta margem será aplicada sobre o custo base deste item para calcular o preço de venda sugerido.
+                  </p>
+                  <div className="mt-2 text-xs text-black">
+                    <span>Preço sugerido para este item: </span>
+                    <span className="font-semibold text-orange-600">
+                      {((item.baseCost * item.hours) * (1 + (item.desiredMargin || 0) / 100) + item.softwareCosts).toFixed(2)}€
+                    </span>
+                  </div>
                 </div>
 
-                {/* Custos de Software */}
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">
-                    Custos Software (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={item.softwareCosts || ''}
-                    onChange={(e) => handleSoftwareCostsChange(item.id, parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                {/* Preço/Hora (editável) */}
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">
-                    Preço/Hora (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={item.hourlyRate || ''}
-                    onChange={(e) => handleHourlyRateChange(item.id, parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="0.00"
-                  />
-                  <p className="text-xs text-black mt-1">
-                    Base: {Math.round(item.baseCost)}€/h
-                  </p>
-                </div>
-              </div>
-
-              {/* Margem Desejada (individual por item) */}
-              <div className="mt-4 bg-muted/10 rounded-lg p-4">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Margem Desejada (%)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1000"
-                  value={item.desiredMargin || 0}
-                  onChange={(e) => handleDesiredMarginChange(item.id, parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
-                <p className="text-xs text-black mt-2">
-                  Esta margem será aplicada sobre o custo base deste item para calcular o preço de venda sugerido.
-                </p>
-                <div className="mt-2 text-xs text-black">
-                  <span>Preço sugerido para este item: </span>
-                  <span className="font-semibold text-orange-600">
-                    {((item.baseCost * item.hours) * (1 + (item.desiredMargin || 0) / 100) + item.softwareCosts).toFixed(2)}€
-                  </span>
-                </div>
-              </div>
-
-              {/* Resumo do item */}
-              <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-xs text-black">Total Linha</p>
-                  <p className="text-sm font-semibold text-orange-600">
-                    {item.lineTotal.toFixed(2)}€
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-black">Margem Linha</p>
-                  <p className="text-sm font-semibold text-orange-600">
-                    {item.lineMargin.toFixed(2)}€
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-black">Custo Base</p>
-                  <p className="text-sm text-black">
-                    {(item.baseCost * item.hours).toFixed(2)}€
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-black">Margem</p>
-                  <p className="text-sm text-black">
-                    {item.baseCost > 0 
-                      ? (((item.hourlyRate - item.baseCost) / item.baseCost) * 100).toFixed(1)
-                      : '0.0'
-                    }%
-                  </p>
+                {/* Resumo do item */}
+                <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-xs text-black">Total Linha</p>
+                    <p className="text-sm font-semibold text-orange-600">
+                      {item.lineTotal.toFixed(2)}€
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-black">Margem Linha</p>
+                    <p className="text-sm font-semibold text-orange-600">
+                      {item.lineMargin.toFixed(2)}€
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-black">Custo Base</p>
+                    <p className="text-sm text-black">
+                      {(item.baseCost * item.hours).toFixed(2)}€
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-black">Margem</p>
+                    <p className="text-sm text-black">
+                      {item.baseCost > 0
+                        ? (((item.hourlyRate - item.baseCost) / item.baseCost) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -388,7 +413,7 @@ export function CostSimulation() {
               />
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-black">
-                  Margem final: {totals.totalBaseCost > 0 
+                  Margem final: {totals.totalBaseCost > 0
                     ? (((finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts) / totals.totalBaseCost) * 100).toFixed(1)
                     : '0.0'
                   }%
