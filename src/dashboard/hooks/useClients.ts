@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import type { Client, ClientInsert, ClientUpdate } from '../../types';
 
+// Local user ID for local-only execution (UUID format)
+const LOCAL_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 export function useClients() {
   return useQuery({
     queryKey: ['clients'],
@@ -16,9 +19,6 @@ export function useClients() {
     },
   });
 }
-
-// Local user ID for local-only execution
-const LOCAL_USER_ID = 'local-user';
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
@@ -56,8 +56,9 @@ export function useUpdateClient() {
       if (error) throw error;
       return data as Client;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['clients', variables.id] });
     },
   });
 }

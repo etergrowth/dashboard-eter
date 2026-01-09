@@ -214,6 +214,9 @@ export function CRM() {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Localização
                   </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                    Notas
+                  </th>
                   <th className="px-6 py-4 text-right text-sm font-semibold text-muted-foreground">
                     Ações
                   </th>
@@ -276,13 +279,22 @@ export function CRM() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {client.latitude && client.longitude ? (
-                        <div className="flex items-center gap-2 text-green-500">
+                      {client.city ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="w-4 h-4" />
-                          <span className="text-xs">GPS</span>
+                          <span className="text-sm">{client.city}</span>
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">Sem localização</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {client.notes ? (
+                        <p className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
+                          {client.notes}
+                        </p>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Sem notas</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
