@@ -116,7 +116,7 @@ export function CMS() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-semibold disabled:opacity-50"
+            className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: uploading ? 'hsl(var(--muted))' : 'hsl(var(--primary))',
               color: uploading ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary-foreground))',
@@ -147,17 +147,17 @@ export function CMS() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`glass-panel p-12 rounded-xl border-2 border-dashed ${
-          dragActive ? 'border-[#7BA8F9] bg-[#7BA8F9]/10' : 'border-white/20'
-        } text-center hover:border-[#7BA8F9]/50 transition cursor-pointer`}
+          dragActive ? 'border-primary bg-primary/10' : 'border-border'
+        } text-center hover:border-primary/50 transition cursor-pointer`}
       >
-        <Upload className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">
+        <Upload className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-card-foreground mb-2">
           Arraste ficheiros para aqui
         </h3>
-        <p className="text-gray-400 mb-4">
+        <p className="text-muted-foreground mb-4">
           ou clique para selecionar ficheiros do seu computador
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Suporta: JPG, PNG, GIF, PDF, DOC, XLS (máx. 50MB)
         </p>
       </div>
@@ -172,14 +172,20 @@ export function CMS() {
 
       {/* Upload Metadata Form */}
       <div className="glass-panel p-6 rounded-xl">
-        <h3 className="text-lg font-semibold text-white mb-4">Metadata do Upload (Opcional)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="flex items-center">
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Metadata do Upload (Opcional)
+            </h3>
+          </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Categoria
+            </label>
             <select
               value={uploadMetadata.category || ''}
               onChange={(e) => setUploadMetadata({ ...uploadMetadata, category: e.target.value })}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
+              className="w-full px-4 py-3 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             >
               <option value="">Sem categoria</option>
               <option value="image">Imagem</option>
@@ -200,7 +206,7 @@ export function CMS() {
           {mediaFiles.map((file) => (
             <div key={file.id} className="glass-panel rounded-xl overflow-hidden group">
               {/* File Preview */}
-              <div className="aspect-video bg-white/5 flex items-center justify-center relative overflow-hidden">
+              <div className="aspect-video bg-muted/10 flex items-center justify-center relative overflow-hidden">
                 {isImage(file.file_type) && file.public_url ? (
                   <img
                     src={file.public_url}
@@ -208,25 +214,29 @@ export function CMS() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <FileText className="w-16 h-16 text-gray-600" />
+                  <FileText className="w-16 h-16 text-muted-foreground" />
                 )}
               </div>
 
               {/* File Info */}
               <div className="p-4">
-                <h4 className="text-white font-medium mb-1 truncate">{file.name}</h4>
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <h4 className="text-card-foreground font-medium mb-1 truncate">{file.name}</h4>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{formatFileSize(file.file_size)}</span>
-                  {file.category && <span className="px-2 py-1 bg-white/5 rounded">{file.category}</span>}
+                  {file.category && (
+                    <span className="px-2 py-1 bg-muted/10 rounded text-muted-foreground">
+                      {file.category}
+                    </span>
+                  )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
                   {file.public_url && (
                     <>
                       <button
                         onClick={() => copyToClipboard(file.public_url!)}
-                        className="flex-1 px-3 py-2 bg-[#7BA8F9]/20 hover:bg-[#7BA8F9]/30 rounded-lg transition text-white text-xs font-medium flex items-center justify-center gap-2"
+                        className="flex-1 px-3 py-2 glass-button rounded-lg text-secondary-foreground text-xs font-medium flex items-center justify-center gap-2"
                         title="Copiar URL"
                       >
                         <LinkIcon className="w-3 h-3" />
@@ -235,7 +245,7 @@ export function CMS() {
                       <a
                         href={file.public_url}
                         download
-                        className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
+                        className="p-2 hover:bg-muted/10 rounded-lg transition text-muted-foreground hover:text-card-foreground"
                         title="Download"
                       >
                         <Download className="w-4 h-4" />
@@ -244,7 +254,7 @@ export function CMS() {
                   )}
                   <button
                     onClick={() => handleDelete(file.id, file.name)}
-                    className="p-2 hover:bg-red-500/10 rounded-lg transition text-gray-400 hover:text-red-400"
+                    className="p-2 hover:bg-destructive/10 rounded-lg transition text-muted-foreground hover:text-destructive"
                     title="Eliminar"
                   >
                     <Trash2 className="w-4 h-4" />

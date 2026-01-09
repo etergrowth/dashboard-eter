@@ -124,8 +124,10 @@ export function CRM() {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition ${
-              showFilters || statusFilter !== 'all' || priorityFilter !== 'all' ? 'bg-[#7BA8F9]/20' : ''
+            className={`glass-button px-6 py-3 rounded-lg font-semibold text-secondary-foreground flex items-center gap-2 transition ${
+              showFilters || statusFilter !== 'all' || priorityFilter !== 'all' 
+                ? 'bg-primary/20 text-primary-foreground' 
+                : ''
             }`}
           >
             <Filter className="w-5 h-5" />
@@ -138,11 +140,13 @@ export function CRM() {
           <div className="glass-panel p-4 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Status
+                </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
+                  className="w-full px-4 py-3 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
                 >
                   <option value="all">Todos</option>
                   <option value="lead">Lead</option>
@@ -153,11 +157,13 @@ export function CRM() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Prioridade</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Prioridade
+                </label>
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
+                  className="w-full px-4 py-3 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
                 >
                   <option value="all">Todas</option>
                   <option value="low">Baixa</option>
@@ -172,7 +178,7 @@ export function CRM() {
                   setStatusFilter('all');
                   setPriorityFilter('all');
                 }}
-                className="mt-4 text-sm text-[#7BA8F9] hover:underline"
+                className="mt-4 text-sm text-primary hover:underline transition-colors"
               >
                 Limpar filtros
               </button>
@@ -188,42 +194,42 @@ export function CRM() {
         <div className="glass-panel rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/10">
+              <thead className="bg-muted/10 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Cliente
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Contacto
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Prioridade
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Valor
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
                     Localização
                   </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-muted-foreground">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-border">
                 {filteredClients.map((client) => (
                   <tr
                     key={client.id}
-                    className="hover:bg-white/5 transition"
+                    className="hover:bg-muted/5 transition"
                   >
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-white">{client.name}</p>
+                        <p className="font-medium text-card-foreground">{client.name}</p>
                         {client.company && (
-                          <p className="text-sm text-gray-400 flex items-center gap-1 mt-1">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                             <Building2 className="w-3 h-3" />
                             {client.company}
                           </p>
@@ -233,13 +239,13 @@ export function CRM() {
                     <td className="px-6 py-4">
                       <div className="space-y-1">
                         {client.email && (
-                          <p className="text-sm text-gray-400 flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <Mail className="w-3 h-3" />
                             {client.email}
                           </p>
                         )}
                         {client.phone && (
-                          <p className="text-sm text-gray-400 flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <Phone className="w-3 h-3" />
                             {client.phone}
                           </p>
@@ -262,7 +268,7 @@ export function CRM() {
                     </td>
                     <td className="px-6 py-4">
                       {client.value && (
-                        <p className="text-white font-medium">
+                        <p className="text-card-foreground font-medium">
                           €{Number(client.value).toLocaleString('pt-PT', {
                             minimumFractionDigits: 2,
                           })}
@@ -271,26 +277,26 @@ export function CRM() {
                     </td>
                     <td className="px-6 py-4">
                       {client.latitude && client.longitude ? (
-                        <div className="flex items-center gap-2 text-green-400">
+                        <div className="flex items-center gap-2 text-green-500">
                           <MapPin className="w-4 h-4" />
                           <span className="text-xs">GPS</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-500">Sem localização</span>
+                        <span className="text-xs text-muted-foreground">Sem localização</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(client)}
-                          className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
+                          className="p-2 hover:bg-muted/10 rounded-lg transition text-muted-foreground hover:text-card-foreground"
                           title="Editar"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(client.id, client.name)}
-                          className="p-2 hover:bg-red-500/10 rounded-lg transition text-gray-400 hover:text-red-400"
+                          className="p-2 hover:bg-destructive/10 rounded-lg transition text-muted-foreground hover:text-destructive"
                           title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />

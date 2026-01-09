@@ -73,29 +73,14 @@ export function Sidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.to === '/dashboard'}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-lg transition group ${
                     isActive
-                      ? ''
-                      : ''
+                      ? 'bg-primary/20 text-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   }`
                 }
-                style={({ isActive }) => ({
-                  backgroundColor: isActive ? 'hsl(var(--primary) / 0.2)' : 'transparent',
-                  color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                })}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.getAttribute('data-active')) {
-                    e.currentTarget.style.backgroundColor = 'hsl(var(--accent))';
-                    e.currentTarget.style.color = 'hsl(var(--foreground))';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!e.currentTarget.getAttribute('data-active')) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))';
-                  }
-                }}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && (

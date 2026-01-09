@@ -4,6 +4,7 @@ import { useProposals, useDeleteProposal } from '../../hooks/useProposals';
 import { useProposalItems, useDeleteProposalItem } from '../../hooks/useProposals';
 import { ProposalForm } from './ProposalForm';
 import { ProposalItemForm } from './ProposalItemForm';
+import { ServicesTable } from './ServicesTable';
 import type { Proposal, ProposalItem } from '../../../types';
 import { PageHeader, SearchBar, ActionButton, LoadingState, EmptyState } from '../../components/sections';
 
@@ -141,6 +142,9 @@ export function Proposals() {
         value={searchTerm}
         onChange={setSearchTerm}
       />
+
+      {/* Services Table */}
+      <ServicesTable />
 
       {/* Proposals List */}
       {selectedProposal ? (
