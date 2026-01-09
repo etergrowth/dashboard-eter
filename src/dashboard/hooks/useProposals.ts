@@ -2,8 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import type { Proposal, ProposalInsert, ProposalUpdate, ProposalItem, ProposalItemInsert, ProposalItemUpdate } from '../../types';
 
-// Local user ID for local-only execution
-const LOCAL_USER_ID = 'local-user';
+// Helper function to get current user ID (optional, RPC function will use auth.uid() if available)
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || null;
+}
 
 // Proposals
 export function useProposals() {
@@ -70,14 +73,40 @@ export function useCreateProposal() {
 
   return useMutation({
     mutationFn: async (proposal: ProposalInsert) => {
-      const { data, error } = await supabase
-        .from('proposals')
-        .insert({ ...proposal, user_id: LOCAL_USER_ID } as any)
-        .select()
-        .single();
+      // Get current user ID (optional - RPC function will use auth.uid() if available)
+      const userId = proposal.user_id || await getCurrentUserId();
+      
+      // Use RPC function instead of direct INSERT (following FORM_SUBMISSION_GUIDE.md pattern)
+      const { data, error } = await supabase.rpc('create_proposal', {
+        p_user_id: userId || null,
+        p_client_id: proposal.client_id || null,
+        p_title: proposal.title,
+        p_description: proposal.description || null,
+        p_status: proposal.status || 'draft',
+        p_total_amount: proposal.total_amount || null,
+        p_total_margin: proposal.total_margin || null,
+        p_valid_until: proposal.valid_until || null,
+        p_notes: proposal.notes || null,
+      });
 
-      if (error) throw error;
-      return data as Proposal;
+      if (error) {
+        console.error('❌ ERRO ao criar proposta:', error);
+        throw error;
+      }
+
+      // Fetch the created proposal
+      if (data && data.success && data.id) {
+        const { data: createdProposal, error: fetchError } = await supabase
+          .from('proposals')
+          .select('*')
+          .eq('id', data.id)
+          .single();
+
+        if (fetchError) throw fetchError;
+        return createdProposal as Proposal;
+      }
+
+      throw new Error('Erro ao criar proposta: resposta inválida da função RPC');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
@@ -90,15 +119,37 @@ export function useUpdateProposal() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ProposalUpdate & { id: string }) => {
-      const { data, error } = await supabase
-        .from('proposals')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      // Use RPC function instead of direct UPDATE (following FORM_SUBMISSION_GUIDE.md pattern)
+      const { data, error } = await supabase.rpc('update_proposal', {
+        p_id: id,
+        p_client_id: updates.client_id !== undefined ? updates.client_id : null,
+        p_title: updates.title || null,
+        p_description: updates.description !== undefined ? updates.description : null,
+        p_status: updates.status || null,
+        p_total_amount: updates.total_amount !== undefined ? updates.total_amount : null,
+        p_total_margin: updates.total_margin !== undefined ? updates.total_margin : null,
+        p_valid_until: updates.valid_until !== undefined ? updates.valid_until : null,
+        p_notes: updates.notes !== undefined ? updates.notes : null,
+      });
 
-      if (error) throw error;
-      return data as Proposal;
+      if (error) {
+        console.error('❌ ERRO ao atualizar proposta:', error);
+        throw error;
+      }
+
+      // Fetch the updated proposal
+      if (data && data.success) {
+        const { data: updatedProposal, error: fetchError } = await supabase
+          .from('proposals')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (fetchError) throw fetchError;
+        return updatedProposal as Proposal;
+      }
+
+      throw new Error('Erro ao atualizar proposta: resposta inválida da função RPC');
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });

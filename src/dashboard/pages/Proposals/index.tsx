@@ -5,6 +5,8 @@ import { useProposalItems, useDeleteProposalItem } from '../../hooks/useProposal
 import { ProposalForm } from './ProposalForm';
 import { ProposalItemForm } from './ProposalItemForm';
 import { ServicesTable } from './ServicesTable';
+import { ProposalsTable } from './ProposalsTable';
+import { CostSimulation } from './CostSimulation';
 import type { Proposal, ProposalItem } from '../../../types';
 import { PageHeader, SearchBar, ActionButton, LoadingState, EmptyState } from '../../components/sections';
 
@@ -145,6 +147,12 @@ export function Proposals() {
 
       {/* Services Table */}
       <ServicesTable />
+
+      {/* Proposals Table */}
+      <ProposalsTable />
+
+      {/* Cost Simulation */}
+      <CostSimulation />
 
       {/* Proposals List */}
       {selectedProposal ? (

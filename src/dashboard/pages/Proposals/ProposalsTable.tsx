@@ -11,36 +11,45 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown, MoreHorizontal } from 'lucide-react';
-import { useAllServices, useCreateService, useUpdateService, useDeleteService } from '../../hooks/useServices';
-import type { Service, ServiceInsert } from '../../../types';
+import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
+import { useProposals, useCreateProposal, useUpdateProposal, useDeleteProposal } from '../../hooks/useProposals';
+import type { Proposal, ProposalInsert } from '../../../types';
+import { Badge } from '../../../components/ui/badge';
 
-export function ServicesTable() {
-  const { data: services, isLoading } = useAllServices();
-  const createService = useCreateService();
-  const updateService = useUpdateService();
-  const deleteService = useDeleteService();
+export function ProposalsTable() {
+  const { data: proposals, isLoading } = useProposals();
+  const createProposal = useCreateProposal();
+  const updateProposal = useUpdateProposal();
+  const deleteProposal = useDeleteProposal();
 
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(true);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [formData, setFormData] = React.useState<Partial<ServiceInsert>>({
-    name: '',
-    base_cost_per_hour: 0,
-    markup_percentage: 0,
+  const [formData, setFormData] = React.useState<Partial<ProposalInsert>>({
+    title: '',
     description: '',
+    status: 'draft',
+    client_id: null,
+    total_amount: null,
+    total_margin: null,
+    valid_until: null,
+    notes: null,
   });
 
-  const handleEdit = (service: Service) => {
-    setEditingId(service.id);
+  const handleEdit = (proposal: Proposal) => {
+    setEditingId(proposal.id);
     setFormData({
-      name: service.name,
-      base_cost_per_hour: service.base_cost_per_hour,
-      markup_percentage: service.markup_percentage,
-      description: service.description || '',
+      title: proposal.title,
+      description: proposal.description || '',
+      status: proposal.status || 'draft',
+      client_id: proposal.client_id,
+      total_amount: proposal.total_amount,
+      total_margin: proposal.total_margin,
+      valid_until: proposal.valid_until || null,
+      notes: proposal.notes || null,
     });
   };
 
@@ -48,174 +57,311 @@ export function ServicesTable() {
     setEditingId(null);
     setIsAdding(false);
     setFormData({
-      name: '',
-      base_cost_per_hour: 0,
-      markup_percentage: 0,
+      title: '',
       description: '',
+      status: 'draft',
+      client_id: null,
+      total_amount: null,
+      total_margin: null,
+      valid_until: null,
+      notes: null,
     });
   };
 
   const handleSave = async () => {
     if (editingId) {
-      await updateService.mutateAsync({
+      await updateProposal.mutateAsync({
         id: editingId,
         ...formData,
       });
       setEditingId(null);
     } else if (isAdding) {
-      const serviceData: ServiceInsert = {
-        name: formData.name!,
-        base_cost_per_hour: formData.base_cost_per_hour!,
-        markup_percentage: formData.markup_percentage!,
+      const proposalData: ProposalInsert = {
+        title: formData.title!,
         description: formData.description || null,
-        final_hourly_rate: (formData.base_cost_per_hour || 0) * (1 + (formData.markup_percentage || 0) / 100),
+        status: formData.status || 'draft',
+        client_id: formData.client_id || null,
+        total_amount: formData.total_amount || null,
+        total_margin: formData.total_margin || null,
+        valid_until: formData.valid_until || null,
+        notes: formData.notes || null,
+        user_id: 'local-user', // Will be replaced with actual user ID later
       };
-      await createService.mutateAsync(serviceData);
+      await createProposal.mutateAsync(proposalData);
       setIsAdding(false);
     }
     setFormData({
-      name: '',
-      base_cost_per_hour: 0,
-      markup_percentage: 0,
+      title: '',
       description: '',
+      status: 'draft',
+      client_id: null,
+      total_amount: null,
+      total_margin: null,
+      valid_until: null,
+      notes: null,
     });
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Tem a certeza que deseja eliminar o serviço "${name}"?`)) {
-      await deleteService.mutateAsync(id);
+  const handleDelete = async (id: string, title: string) => {
+    if (window.confirm(`Tem a certeza que deseja eliminar a proposta "${title}"?`)) {
+      await deleteProposal.mutateAsync(id);
     }
   };
 
-  const handleChange = (field: keyof ServiceInsert, value: string | number) => {
+  const handleChange = (field: keyof ProposalInsert, value: string | number | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Calcular média de preço/hora
-  const averagePrice = services && services.length > 0
-    ? services.reduce((sum, s) => sum + Number(s.final_hourly_rate || 0), 0) / services.length
-    : 0;
+  const getStatusLabel = (status: string | null) => {
+    switch (status) {
+      case 'draft':
+        return 'Rascunho';
+      case 'sent':
+        return 'Enviada';
+      case 'negotiating':
+        return 'Em Negociação';
+      case 'accepted':
+        return 'Aceite';
+      case 'rejected':
+        return 'Rejeitada';
+      default:
+        return status || 'Rascunho';
+    }
+  };
 
-  const columns: ColumnDef<Service>[] = React.useMemo(
+  const getStatusBadge = (status: string | null) => {
+    const label = getStatusLabel(status);
+    switch (status) {
+      case 'draft':
+        return (
+          <Badge variant="outline" className="bg-gray-500/10 text-gray-400 border-gray-500/30">
+            {label}
+          </Badge>
+        );
+      case 'sent':
+        return (
+          <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+            {label}
+          </Badge>
+        );
+      case 'negotiating':
+        return (
+          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+            {label}
+          </Badge>
+        );
+      case 'accepted':
+        return (
+          <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
+            {label}
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/30">
+            {label}
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="bg-gray-500/10 text-gray-400 border-gray-500/30">
+            {label}
+          </Badge>
+        );
+    }
+  };
+
+  const columns: ColumnDef<Proposal & { client?: { name: string; company: string | null } | null }>[] = React.useMemo(
     () => [
       {
-        accessorKey: "name",
+        accessorKey: "title",
         header: ({ column }) => {
           return (
             <button
               className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-              <span>Função</span>
+              <span>Título</span>
               <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
             </button>
           );
         },
         cell: ({ row }) => {
-          const service = row.original;
-          if (editingId === service.id) {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
             return (
               <input
                 type="text"
-                value={formData.name || ''}
-                onChange={(e) => handleChange('name', e.target.value)}
+                value={formData.title || ''}
+                onChange={(e) => handleChange('title', e.target.value)}
                 className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               />
             );
           }
           return (
             <div>
-              <p className="text-card-foreground font-medium">{service.name}</p>
-              {service.description && (
-                <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+              <p className="text-card-foreground font-medium">{proposal.title}</p>
+              {proposal.description && (
+                <p className="text-xs text-muted-foreground mt-1">{proposal.description}</p>
               )}
             </div>
           );
         },
       },
       {
-        accessorKey: "base_cost_per_hour",
+        accessorKey: "client",
         header: ({ column }) => {
           return (
             <button
               className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-              <span>Custo/Hora (€)</span>
+              <span>Cliente</span>
               <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
             </button>
           );
         },
         cell: ({ row }) => {
-          const service = row.original;
-          if (editingId === service.id) {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
+            return (
+              <span className="text-muted-foreground text-sm">Editar no formulário</span>
+            );
+          }
+          return (
+            <span className="text-card-foreground">
+              {proposal.client?.name || 'Sem cliente'}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }) => {
+          return (
+            <button
+              className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              <span>Estado</span>
+              <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
+            </button>
+          );
+        },
+        cell: ({ row }) => {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
+            return (
+              <select
+                value={formData.status || 'draft'}
+                onChange={(e) => handleChange('status', e.target.value)}
+                className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              >
+                <option value="draft">Rascunho</option>
+                <option value="sent">Enviada</option>
+                <option value="negotiating">Em Negociação</option>
+                <option value="accepted">Aceite</option>
+                <option value="rejected">Rejeitada</option>
+              </select>
+            );
+          }
+          return getStatusBadge(proposal.status);
+        },
+      },
+      {
+        accessorKey: "total_amount",
+        header: ({ column }) => {
+          return (
+            <button
+              className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              <span>Total (€)</span>
+              <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
+            </button>
+          );
+        },
+        cell: ({ row }) => {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
             return (
               <input
                 type="number"
                 step="0.01"
-                value={formData.base_cost_per_hour || 0}
-                onChange={(e) => handleChange('base_cost_per_hour', parseFloat(e.target.value) || 0)}
+                value={formData.total_amount || ''}
+                onChange={(e) => handleChange('total_amount', e.target.value ? parseFloat(e.target.value) : null)}
                 className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               />
-            );
-          }
-          return <span className="text-card-foreground">{Math.round(Number(service.base_cost_per_hour))}</span>;
-        },
-      },
-      {
-        accessorKey: "markup_percentage",
-        header: ({ column }) => {
-          return (
-            <button
-              className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              <span>Markup (%)</span>
-              <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
-            </button>
-          );
-        },
-        cell: ({ row }) => {
-          const service = row.original;
-          if (editingId === service.id) {
-            return (
-              <input
-                type="number"
-                step="0.01"
-                value={formData.markup_percentage || 0}
-                onChange={(e) => handleChange('markup_percentage', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              />
-            );
-          }
-          return <span className="text-card-foreground">{Math.round(Number(service.markup_percentage))}</span>;
-        },
-      },
-      {
-        accessorKey: "final_hourly_rate",
-        header: ({ column }) => {
-          return (
-            <button
-              className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              <span>Preço/Hora (€)</span>
-              <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
-            </button>
-          );
-        },
-        cell: ({ row }) => {
-          const service = row.original;
-          if (editingId === service.id) {
-            return (
-              <span className="text-card-foreground font-medium">
-                {Math.round((formData.base_cost_per_hour || 0) * (1 + (formData.markup_percentage || 0) / 100))}
-              </span>
             );
           }
           return (
             <span className="text-card-foreground font-medium">
-              {Math.round(Number(service.final_hourly_rate))}
+              {proposal.total_amount?.toFixed(2) || '0.00'}€
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "total_margin",
+        header: ({ column }) => {
+          return (
+            <button
+              className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              <span>Margem (€)</span>
+              <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
+            </button>
+          );
+        },
+        cell: ({ row }) => {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
+            return (
+              <input
+                type="number"
+                step="0.01"
+                value={formData.total_margin || ''}
+                onChange={(e) => handleChange('total_margin', e.target.value ? parseFloat(e.target.value) : null)}
+                className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              />
+            );
+          }
+          return (
+            <span className="text-card-foreground font-medium">
+              {proposal.total_margin?.toFixed(2) || '0.00'}€
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "valid_until",
+        header: ({ column }) => {
+          return (
+            <button
+              className="flex items-center gap-2 hover:text-primary transition-colors whitespace-nowrap"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              <span>Válida até</span>
+              <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
+            </button>
+          );
+        },
+        cell: ({ row }) => {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
+            return (
+              <input
+                type="date"
+                value={formData.valid_until ? new Date(formData.valid_until).toISOString().split('T')[0] : ''}
+                onChange={(e) => handleChange('valid_until', e.target.value || null)}
+                className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              />
+            );
+          }
+          return (
+            <span className="text-card-foreground">
+              {proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('pt-PT') : '-'}
             </span>
           );
         },
@@ -224,13 +370,13 @@ export function ServicesTable() {
         id: "actions",
         header: () => <div className="text-right">Ações</div>,
         cell: ({ row }) => {
-          const service = row.original;
-          if (editingId === service.id) {
+          const proposal = row.original;
+          if (editingId === proposal.id) {
             return (
               <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={handleSave}
-                  disabled={!formData.name || updateService.isPending}
+                  disabled={!formData.title || updateProposal.isPending}
                   className="p-2 hover:bg-primary/20 rounded-lg transition text-primary disabled:opacity-50"
                   title="Guardar"
                 >
@@ -249,14 +395,14 @@ export function ServicesTable() {
           return (
             <div className="flex items-center justify-end gap-2">
               <button
-                onClick={() => handleEdit(service)}
+                onClick={() => handleEdit(proposal)}
                 className="p-2 hover:bg-muted/10 rounded-lg transition text-muted-foreground hover:text-card-foreground"
                 title="Editar"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
-                onClick={() => handleDelete(service.id, service.name)}
+                onClick={() => handleDelete(proposal.id, proposal.title)}
                 className="p-2 hover:bg-destructive/10 rounded-lg transition text-muted-foreground hover:text-destructive"
                 title="Eliminar"
               >
@@ -268,11 +414,11 @@ export function ServicesTable() {
         enableHiding: false,
       },
     ],
-    [editingId, formData, updateService.isPending]
+    [editingId, formData, updateProposal.isPending]
   );
 
   const table = useReactTable({
-    data: services || [],
+    data: proposals || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -291,7 +437,7 @@ export function ServicesTable() {
   if (isLoading) {
     return (
       <div className="glass-panel p-6 rounded-xl">
-        <p className="text-center text-muted-foreground">A carregar serviços...</p>
+        <p className="text-center text-muted-foreground">A carregar propostas...</p>
       </div>
     );
   }
@@ -310,7 +456,7 @@ export function ServicesTable() {
           ) : (
             <ChevronDown className="w-5 h-5" />
           )}
-          <span>Tabela de Serviços</span>
+          <span>Tabela de Propostas</span>
         </button>
         {!isAdding && isExpanded && (
           <button
@@ -318,7 +464,7 @@ export function ServicesTable() {
             className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
-            Adicionar Serviço
+            Adicionar Proposta
           </button>
         )}
       </div>
@@ -330,10 +476,10 @@ export function ServicesTable() {
       >
         <div className="flex items-center py-4">
           <input
-            placeholder="Filtrar serviços..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filtrar propostas..."
+            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
+              table.getColumn("title")?.setFilterValue(event.target.value)
             }
             className="max-w-sm px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           />
@@ -369,9 +515,35 @@ export function ServicesTable() {
                     <td className="px-4 py-3">
                       <input
                         type="text"
-                        value={formData.name || ''}
-                        onChange={(e) => handleChange('name', e.target.value)}
-                        placeholder="Nome do serviço"
+                        value={formData.title || ''}
+                        onChange={(e) => handleChange('title', e.target.value)}
+                        placeholder="Título da proposta"
+                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-muted-foreground text-sm">Selecionar no formulário</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={formData.status || 'draft'}
+                        onChange={(e) => handleChange('status', e.target.value)}
+                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                      >
+                        <option value="draft">Rascunho</option>
+                        <option value="sent">Enviada</option>
+                        <option value="negotiating">Em Negociação</option>
+                        <option value="accepted">Aceite</option>
+                        <option value="rejected">Rejeitada</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.total_amount || ''}
+                        onChange={(e) => handleChange('total_amount', e.target.value ? parseFloat(e.target.value) : null)}
+                        placeholder="0.00"
                         className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                       />
                     </td>
@@ -379,30 +551,25 @@ export function ServicesTable() {
                       <input
                         type="number"
                         step="0.01"
-                        value={formData.base_cost_per_hour || 0}
-                        onChange={(e) => handleChange('base_cost_per_hour', parseFloat(e.target.value) || 0)}
+                        value={formData.total_margin || ''}
+                        onChange={(e) => handleChange('total_margin', e.target.value ? parseFloat(e.target.value) : null)}
+                        placeholder="0.00"
                         className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <input
-                        type="number"
-                        step="0.01"
-                        value={formData.markup_percentage || 0}
-                        onChange={(e) => handleChange('markup_percentage', parseFloat(e.target.value) || 0)}
+                        type="date"
+                        value={formData.valid_until ? new Date(formData.valid_until).toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleChange('valid_until', e.target.value || null)}
                         className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                       />
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-card-foreground font-medium">
-                        {Math.round((formData.base_cost_per_hour || 0) * (1 + (formData.markup_percentage || 0) / 100))}
-                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={handleSave}
-                          disabled={!formData.name || createService.isPending}
+                          disabled={!formData.title || createProposal.isPending}
                           className="p-2 hover:bg-primary/20 rounded-lg transition text-primary disabled:opacity-50"
                           title="Guardar"
                         >
@@ -444,22 +611,8 @@ export function ServicesTable() {
                       colSpan={columns.length}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      Nenhum serviço encontrado.
+                      Nenhuma proposta encontrada.
                     </td>
-                  </tr>
-                )}
-                {/* Linha de média */}
-                {services && services.length > 0 && (
-                  <tr className="bg-muted/10 border-t-2 border-border font-semibold">
-                    <td colSpan={3} className="px-4 py-3 text-muted-foreground">
-                      Média Preço/Hora
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-card-foreground font-semibold">
-                        {Math.round(averagePrice)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3"></td>
                   </tr>
                 )}
               </tbody>
@@ -469,7 +622,7 @@ export function ServicesTable() {
 
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} serviço(s) encontrado(s).
+            {table.getFilteredRowModel().rows.length} proposta(s) encontrada(s).
           </div>
           <div className="space-x-2">
             <button
