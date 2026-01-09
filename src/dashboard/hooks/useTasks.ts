@@ -36,17 +36,17 @@ export function useClientTasks(clientId?: string) {
   });
 }
 
+// Local user ID for local-only execution
+const LOCAL_USER_ID = 'local-user';
+
 export function useCreateTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (task: TaskInsert) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ ...task, user_id: user.id })
+        .insert({ ...task, user_id: LOCAL_USER_ID } as any)
         .select()
         .single();
 
@@ -66,6 +66,7 @@ export function useUpdateTask() {
     mutationFn: async ({ id, ...updates }: TaskUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('tasks')
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('id', id)
         .select()

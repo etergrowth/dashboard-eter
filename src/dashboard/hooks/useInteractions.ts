@@ -9,7 +9,7 @@ export function useInteractions(clientId?: string) {
       let query = supabase
         .from('interactions')
         .select('*')
-        .order('interaction_date', { ascending: false });
+        .order('date', { ascending: false });
 
       if (clientId) {
         query = query.eq('client_id', clientId);
@@ -23,17 +23,17 @@ export function useInteractions(clientId?: string) {
   });
 }
 
+// Local user ID for local-only execution
+const LOCAL_USER_ID = 'local-user';
+
 export function useCreateInteraction() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (interaction: InteractionInsert) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('interactions')
-        .insert({ ...interaction, user_id: user.id })
+        .insert({ ...interaction, user_id: LOCAL_USER_ID } as any)
         .select()
         .single();
 
@@ -53,6 +53,7 @@ export function useUpdateInteraction() {
     mutationFn: async ({ id, ...updates }: InteractionUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('interactions')
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('id', id)
         .select()

@@ -28,6 +28,18 @@ export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
+export type Service = Database['public']['Tables']['services']['Row'];
+export type ServiceInsert = Database['public']['Tables']['services']['Insert'];
+export type ServiceUpdate = Database['public']['Tables']['services']['Update'];
+
+export type Proposal = Database['public']['Tables']['proposals']['Row'];
+export type ProposalInsert = Database['public']['Tables']['proposals']['Insert'];
+export type ProposalUpdate = Database['public']['Tables']['proposals']['Update'];
+
+export type ProposalItem = Database['public']['Tables']['proposal_items']['Row'];
+export type ProposalItemInsert = Database['public']['Tables']['proposal_items']['Insert'];
+export type ProposalItemUpdate = Database['public']['Tables']['proposal_items']['Update'];
+
 // Enums
 export type ClientStatus = 'lead' | 'proposal' | 'negotiation' | 'closed' | 'lost';
 export type ClientPriority = 'low' | 'medium' | 'high';
@@ -35,19 +47,4 @@ export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
 export type InteractionType = 'call' | 'email' | 'meeting' | 'note';
 export type KanbanColumn = 'todo' | 'doing' | 'done';
-
-export interface Waypoint {
-    location: { lat: number; lng: number };
-    address: string;
-    stopover: boolean;
-}
-
-export interface Route {
-    id: string;
-    user_id: string;
-    name: string;
-    waypoints: Waypoint[];
-    total_distance: string;
-    total_duration: string;
-    created_at: string;
-}
+export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'negotiating';

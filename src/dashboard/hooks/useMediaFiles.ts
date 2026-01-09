@@ -17,55 +17,18 @@ export function useMediaFiles() {
   });
 }
 
-export function useClientMediaFiles(clientId?: string) {
-  return useQuery({
-    queryKey: ['media-files', 'client', clientId],
-    queryFn: async () => {
-      if (!clientId) return [];
 
-      const { data, error } = await supabase
-        .from('media_files')
-        .select('*')
-        .eq('client_id', clientId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as MediaFile[];
-    },
-    enabled: !!clientId,
-  });
-}
-
-export function useProjectMediaFiles(projectId?: string) {
-  return useQuery({
-    queryKey: ['media-files', 'project', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-
-      const { data, error } = await supabase
-        .from('media_files')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as MediaFile[];
-    },
-    enabled: !!projectId,
-  });
-}
+// Local user ID for local-only execution
+const LOCAL_USER_ID = 'local-user';
 
 export function useUploadFile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ file, metadata }: { file: File; metadata: Omit<MediaFileInsert, 'file_url' | 'file_size' | 'mime_type' | 'user_id'> }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
+    mutationFn: async ({ file, metadata }: { file: File; metadata: Omit<MediaFileInsert, 'file_path' | 'file_size' | 'file_type' | 'user_id' | 'public_url'> }) => {
       // Generate unique file name
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${LOCAL_USER_ID}/${Date.now()}.${fileExt}`;
 
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
@@ -82,14 +45,14 @@ export function useUploadFile() {
       // Save file metadata to database
       const { data, error } = await supabase
         .from('media_files')
-        // @ts-ignore
         .insert({
           ...metadata,
-          file_url: publicUrl,
+          file_path: fileName,
           file_size: file.size,
-          mime_type: file.type,
-          user_id: user.id,
-        })
+          file_type: file.type,
+          public_url: publicUrl,
+          user_id: LOCAL_USER_ID,
+        } as any)
         .select()
         .single();
 
@@ -109,7 +72,7 @@ export function useUpdateMediaFile() {
     mutationFn: async ({ id, ...updates }: MediaFileUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('media_files')
-        // @ts-ignore
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('id', id)
         .select()
@@ -129,9 +92,29 @@ export function useDeleteFile() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.functions.invoke('delete-media-file', {
-        body: { id },
-      });
+      // First get the file to delete from storage
+      const { data: file, error: fetchError } = await supabase
+        .from('media_files')
+        .select('file_path')
+        .eq('id', id)
+        .single() as { data: { file_path: string } | null; error: any };
+
+      if (fetchError) throw fetchError;
+
+      // Delete from storage if file_path exists
+      if (file?.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from('media')
+          .remove([file.file_path]);
+
+        if (storageError) throw storageError;
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('media_files')
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
     },

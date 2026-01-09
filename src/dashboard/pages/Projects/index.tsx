@@ -4,6 +4,7 @@ import { useProjects, useDeleteProject } from '../../hooks/useProjects';
 import { ProjectForm } from './ProjectForm';
 import { KanbanBoard } from './KanbanBoard';
 import type { Project } from '../../../types';
+import { PageHeader, StatsGrid, ActionButton, EmptyState, LoadingState } from '../../components/sections';
 
 export function Projects() {
   const { data: projects, isLoading } = useProjects();
@@ -45,72 +46,45 @@ export function Projects() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'text-red-400';
-      case 'medium':
-        return 'text-yellow-400';
-      case 'low':
-        return 'text-green-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
+
+  const stats = [
+    {
+      name: 'Total Projetos',
+      value: projects?.length || 0,
+    },
+    {
+      name: 'Em Progresso',
+      value: projects?.filter((p) => p.status === 'active').length || 0,
+    },
+    {
+      name: 'Concluídos',
+      value: projects?.filter((p) => p.status === 'completed').length || 0,
+    },
+    {
+      name: 'Planeamento',
+      value: projects?.filter((p) => p.status === 'planning').length || 0,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Projetos
-          </h1>
-          <p className="text-gray-400">
-            Gestão de projetos e tarefas
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Projeto
-        </button>
-      </div>
+      <PageHeader
+        title="Projetos"
+        description="Gestão de projetos e tarefas"
+        action={
+          <ActionButton
+            label="Novo Projeto"
+            onClick={() => setShowForm(true)}
+            icon={Plus}
+          />
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Total Projetos</p>
-          <p className="text-2xl font-bold text-white">{projects?.length || 0}</p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Em Progresso</p>
-          <p className="text-2xl font-bold text-yellow-400">
-            {projects?.filter((p) => p.status === 'in_progress').length || 0}
-          </p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Concluídos</p>
-          <p className="text-2xl font-bold text-green-400">
-            {projects?.filter((p) => p.status === 'completed').length || 0}
-          </p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Planeamento</p>
-          <p className="text-2xl font-bold text-blue-400">
-            {projects?.filter((p) => p.status === 'planning').length || 0}
-          </p>
-        </div>
-      </div>
+      <StatsGrid stats={stats} columns={4} />
 
       {/* Projects List */}
       {isLoading ? (
-        <div className="glass-panel p-12 rounded-xl text-center">
-          <div className="w-12 h-12 border-4 border-[#7BA8F9] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">A carregar projetos...</p>
-        </div>
+        <LoadingState message="A carregar projetos..." />
       ) : projects && projects.length > 0 ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -131,9 +105,6 @@ export function Projects() {
                       className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(project.status)}`}
                     >
                       {project.status}
-                    </span>
-                    <span className={`text-xs font-medium ${getPriorityColor(project.priority)}`}>
-                      {project.priority}
                     </span>
                   </div>
 
@@ -198,22 +169,18 @@ export function Projects() {
           )}
         </>
       ) : (
-        <div className="glass-panel p-12 rounded-xl text-center">
-          <Briefcase className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Nenhum projeto criado
-          </h3>
-          <p className="text-gray-400 mb-6">
-            Crie o seu primeiro projeto e organize tarefas com o Kanban board.
-          </p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="glass-button px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition"
-          >
-            <Plus className="w-5 h-5" />
-            Criar Primeiro Projeto
-          </button>
-        </div>
+        <EmptyState
+          icon={Briefcase}
+          title="Nenhum projeto criado"
+          description="Crie o seu primeiro projeto e organize tarefas com o Kanban board."
+          action={
+            <ActionButton
+              label="Criar Primeiro Projeto"
+              onClick={() => setShowForm(true)}
+              icon={Plus}
+            />
+          }
+        />
       )}
 
       {/* Project Form Modal */}

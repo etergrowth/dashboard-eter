@@ -1,13 +1,10 @@
 import { useState, useRef } from 'react';
-import { Image, Upload, Folder, FileText, Trash2, Download, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Upload, Folder, FileText, Trash2, Download, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useMediaFiles, useUploadFile, useDeleteFile } from '../../hooks/useMediaFiles';
-import { useClients } from '../../hooks/useClients';
-import { useProjects } from '../../hooks/useProjects';
+import { PageHeader, StatsGrid, ActionButton, LoadingState, EmptyState } from '../../components/sections';
 
 export function CMS() {
   const { data: mediaFiles, isLoading } = useMediaFiles();
-  const { data: clients } = useClients();
-  const { data: projects } = useProjects();
   const uploadFile = useUploadFile();
   const deleteFile = useDeleteFile();
 
@@ -17,11 +14,7 @@ export function CMS() {
 
   // Form state for upload metadata
   const [uploadMetadata, setUploadMetadata] = useState({
-    title: '',
-    description: '',
     category: '',
-    client_id: null as string | null,
-    project_id: null as string | null,
   });
 
   const handleFileSelect = (files: FileList | null) => {
@@ -37,11 +30,8 @@ export function CMS() {
         await uploadFile.mutateAsync({
           file,
           metadata: {
-            title: uploadMetadata.title || file.name,
-            description: uploadMetadata.description || null,
+            name: file.name,
             category: uploadMetadata.category || null,
-            client_id: uploadMetadata.client_id,
-            project_id: uploadMetadata.project_id,
           },
         });
       } catch (error) {
@@ -51,11 +41,7 @@ export function CMS() {
 
     setUploading(false);
     setUploadMetadata({
-      title: '',
-      description: '',
       category: '',
-      client_id: null,
-      project_id: null,
     });
   };
 
@@ -79,8 +65,8 @@ export function CMS() {
     }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (window.confirm(`Tem a certeza que deseja eliminar "${title}"?`)) {
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Tem a certeza que deseja eliminar "${name}"?`)) {
       deleteFile.mutate(id);
     }
   };
@@ -90,8 +76,8 @@ export function CMS() {
     alert('URL copiado para a área de transferência!');
   };
 
-  const isImage = (mimeType: string | null) => {
-    return mimeType?.startsWith('image/');
+  const isImage = (fileType: string | null) => {
+    return fileType?.startsWith('image/');
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -102,62 +88,56 @@ export function CMS() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const stats = [
+    {
+      name: 'Total Ficheiros',
+      value: mediaFiles?.length || 0,
+    },
+    {
+      name: 'Imagens',
+      value: mediaFiles?.filter((f) => isImage(f.file_type)).length || 0,
+    },
+    {
+      name: 'Documentos',
+      value: mediaFiles?.filter((f) => !isImage(f.file_type)).length || 0,
+    },
+    {
+      name: 'Total',
+      value: formatFileSize(mediaFiles?.reduce((acc, f) => acc + (f.file_size || 0), 0) || 0),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            CMS - Media Manager
-          </h1>
-          <p className="text-gray-400">
-            Gestão de imagens e ficheiros
-          </p>
-        </div>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition disabled:opacity-50"
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              A carregar...
-            </>
-          ) : (
-            <>
-              <Upload className="w-5 h-5" />
-              Upload Ficheiros
-            </>
-          )}
-        </button>
-      </div>
+      <PageHeader
+        title="CMS - Media Manager"
+        description="Gestão de imagens e ficheiros"
+        action={
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-semibold disabled:opacity-50"
+            style={{
+              backgroundColor: uploading ? 'hsl(var(--muted))' : 'hsl(var(--primary))',
+              color: uploading ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary-foreground))',
+            }}
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                A carregar...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" />
+                Upload Ficheiros
+              </>
+            )}
+          </button>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Total Ficheiros</p>
-          <p className="text-2xl font-bold text-white">{mediaFiles?.length || 0}</p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Imagens</p>
-          <p className="text-2xl font-bold text-blue-400">
-            {mediaFiles?.filter((f) => isImage(f.mime_type)).length || 0}
-          </p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Documentos</p>
-          <p className="text-2xl font-bold text-green-400">
-            {mediaFiles?.filter((f) => !isImage(f.mime_type)).length || 0}
-          </p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Total</p>
-          <p className="text-2xl font-bold text-yellow-400">
-            {formatFileSize(mediaFiles?.reduce((acc, f) => acc + (f.file_size || 0), 0) || 0)}
-          </p>
-        </div>
-      </div>
+      <StatsGrid stats={stats} columns={4} />
 
       {/* Upload Area */}
       <div
@@ -193,17 +173,7 @@ export function CMS() {
       {/* Upload Metadata Form */}
       <div className="glass-panel p-6 rounded-xl">
         <h3 className="text-lg font-semibold text-white mb-4">Metadata do Upload (Opcional)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Título</label>
-            <input
-              type="text"
-              value={uploadMetadata.title}
-              onChange={(e) => setUploadMetadata({ ...uploadMetadata, title: e.target.value })}
-              placeholder="Nome do ficheiro..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
             <select
@@ -219,40 +189,22 @@ export function CMS() {
               <option value="presentation">Apresentação</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Cliente</label>
-            <select
-              value={uploadMetadata.client_id || ''}
-              onChange={(e) => setUploadMetadata({ ...uploadMetadata, client_id: e.target.value || null })}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA8F9]"
-            >
-              <option value="">Sem cliente</option>
-              {clients?.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 
       {/* Files Grid */}
       {isLoading ? (
-        <div className="glass-panel p-12 rounded-xl text-center">
-          <Loader2 className="w-12 h-12 text-[#7BA8F9] animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">A carregar ficheiros...</p>
-        </div>
+        <LoadingState message="A carregar ficheiros..." />
       ) : mediaFiles && mediaFiles.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {mediaFiles.map((file) => (
             <div key={file.id} className="glass-panel rounded-xl overflow-hidden group">
               {/* File Preview */}
               <div className="aspect-video bg-white/5 flex items-center justify-center relative overflow-hidden">
-                {isImage(file.mime_type) ? (
+                {isImage(file.file_type) && file.public_url ? (
                   <img
-                    src={file.file_url}
-                    alt={file.title}
+                    src={file.public_url}
+                    alt={file.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -262,10 +214,7 @@ export function CMS() {
 
               {/* File Info */}
               <div className="p-4">
-                <h4 className="text-white font-medium mb-1 truncate">{file.title}</h4>
-                {file.description && (
-                  <p className="text-sm text-gray-400 mb-2 line-clamp-2">{file.description}</p>
-                )}
+                <h4 className="text-white font-medium mb-1 truncate">{file.name}</h4>
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{formatFileSize(file.file_size)}</span>
                   {file.category && <span className="px-2 py-1 bg-white/5 rounded">{file.category}</span>}
@@ -273,24 +222,28 @@ export function CMS() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                  {file.public_url && (
+                    <>
+                      <button
+                        onClick={() => copyToClipboard(file.public_url!)}
+                        className="flex-1 px-3 py-2 bg-[#7BA8F9]/20 hover:bg-[#7BA8F9]/30 rounded-lg transition text-white text-xs font-medium flex items-center justify-center gap-2"
+                        title="Copiar URL"
+                      >
+                        <LinkIcon className="w-3 h-3" />
+                        Copiar
+                      </button>
+                      <a
+                        href={file.public_url}
+                        download
+                        className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
+                        title="Download"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </>
+                  )}
                   <button
-                    onClick={() => copyToClipboard(file.file_url)}
-                    className="flex-1 px-3 py-2 bg-[#7BA8F9]/20 hover:bg-[#7BA8F9]/30 rounded-lg transition text-white text-xs font-medium flex items-center justify-center gap-2"
-                    title="Copiar URL"
-                  >
-                    <LinkIcon className="w-3 h-3" />
-                    Copiar
-                  </button>
-                  <a
-                    href={file.file_url}
-                    download
-                    className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
-                    title="Download"
-                  >
-                    <Download className="w-4 h-4" />
-                  </a>
-                  <button
-                    onClick={() => handleDelete(file.id, file.title)}
+                    onClick={() => handleDelete(file.id, file.name)}
                     className="p-2 hover:bg-red-500/10 rounded-lg transition text-gray-400 hover:text-red-400"
                     title="Eliminar"
                   >
@@ -302,15 +255,11 @@ export function CMS() {
           ))}
         </div>
       ) : (
-        <div className="glass-panel p-12 rounded-xl text-center">
-          <Folder className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Biblioteca vazia
-          </h3>
-          <p className="text-gray-400">
-            Faça upload de imagens e ficheiros para começar
-          </p>
-        </div>
+        <EmptyState
+          icon={Folder}
+          title="Biblioteca vazia"
+          description="Faça upload de imagens e ficheiros para começar"
+        />
       )}
     </div>
   );

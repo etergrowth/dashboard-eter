@@ -302,6 +302,129 @@ export interface Database {
           created_at?: string;
         };
       };
+      services: {
+        Row: {
+          id: string;
+          name: string;
+          base_cost_per_hour: number;
+          markup_percentage: number;
+          final_hourly_rate: number;
+          description: string | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          base_cost_per_hour: number;
+          markup_percentage: number;
+          final_hourly_rate: number;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          base_cost_per_hour?: number;
+          markup_percentage?: number;
+          final_hourly_rate?: number;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      proposals: {
+        Row: {
+          id: string;
+          user_id: string;
+          client_id: string | null;
+          title: string;
+          description: string | null;
+          status: string | null;
+          total_amount: number | null;
+          total_margin: number | null;
+          valid_until: string | null;
+          notes: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          client_id?: string | null;
+          title: string;
+          description?: string | null;
+          status?: string | null;
+          total_amount?: number | null;
+          total_margin?: number | null;
+          valid_until?: string | null;
+          notes?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          client_id?: string | null;
+          title?: string;
+          description?: string | null;
+          status?: string | null;
+          total_amount?: number | null;
+          total_margin?: number | null;
+          valid_until?: string | null;
+          notes?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      proposal_items: {
+        Row: {
+          id: string;
+          proposal_id: string;
+          service_id: string;
+          estimated_hours: number;
+          software_costs: number;
+          applied_hourly_rate: number;
+          line_total: number;
+          line_margin: number;
+          notes: string | null;
+          position: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          proposal_id: string;
+          service_id: string;
+          estimated_hours?: number;
+          software_costs?: number;
+          applied_hourly_rate: number;
+          line_total?: number;
+          line_margin?: number;
+          notes?: string | null;
+          position?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          proposal_id?: string;
+          service_id?: string;
+          estimated_hours?: number;
+          software_costs?: number;
+          applied_hourly_rate?: number;
+          line_total?: number;
+          line_margin?: number;
+          notes?: string | null;
+          position?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

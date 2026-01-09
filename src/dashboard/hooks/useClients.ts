@@ -17,17 +17,17 @@ export function useClients() {
   });
 }
 
+// Local user ID for local-only execution
+const LOCAL_USER_ID = 'local-user';
+
 export function useCreateClient() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (client: ClientInsert) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('clients')
-        .insert({ ...client, user_id: user.id })
+        .insert({ ...client, user_id: LOCAL_USER_ID } as any)
         .select()
         .single();
 
@@ -47,6 +47,7 @@ export function useUpdateClient() {
     mutationFn: async ({ id, ...updates }: ClientUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('clients')
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('id', id)
         .select()

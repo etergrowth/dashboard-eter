@@ -38,8 +38,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       kanban_column: columnId as 'todo' | 'doing' | 'done',
       position,
       description: null,
-      assigned_to: null,
-      due_date: null,
+      user_id: '', // Will be set by the hook
     };
 
     createTask.mutate(taskData, {
@@ -142,11 +141,6 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
                     {task.description && (
                       <p className="text-gray-400 text-xs mt-1 break-words">
                         {task.description}
-                      </p>
-                    )}
-                    {task.due_date && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        📅 {new Date(task.due_date).toLocaleDateString('pt-PT')}
                       </p>
                     )}
                   </div>

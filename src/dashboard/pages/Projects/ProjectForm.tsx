@@ -19,11 +19,9 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
     description: project?.description || '',
     client_id: project?.client_id || null,
     status: project?.status || 'planning',
-    priority: project?.priority || 'medium',
     start_date: project?.start_date || null,
     end_date: project?.end_date || null,
     budget: project?.budget || null,
-    notes: project?.notes || '',
   });
 
   const handleChange = (
@@ -41,11 +39,9 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
       description: formData.description || null,
       client_id: formData.client_id || null,
       status: formData.status || 'planning',
-      priority: formData.priority || 'medium',
       start_date: formData.start_date || null,
       end_date: formData.end_date || null,
       budget: formData.budget ? Number(formData.budget) : null,
-      notes: formData.notes || null,
       user_id: '', // Will be set by the hook
     };
 
@@ -154,22 +150,6 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Prioridade
-                </label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
-                >
-                  <option value="low">Baixa</option>
-                  <option value="medium">Média</option>
-                  <option value="high">Alta</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Data de Início
                 </label>
                 <input
@@ -209,21 +189,6 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
                 />
               </div>
             </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Notas
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes || ''}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition resize-none"
-              placeholder="Notas adicionais sobre o projeto..."
-            />
           </div>
 
           {/* Submit */}

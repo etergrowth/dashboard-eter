@@ -3,52 +3,61 @@ import {
   LayoutDashboard,
   Users,
   Briefcase,
-  Map,
   Image,
-  LogOut,
+  FileText,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
-import { useAuth } from '../hooks/useAuth';
 
 const navigation = [
   { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { name: 'CRM', to: '/dashboard/crm', icon: Users },
   { name: 'Projetos', to: '/dashboard/projects', icon: Briefcase },
-  { name: 'Mapa', to: '/dashboard/map', icon: Map },
+  { name: 'Propostas', to: '/dashboard/proposals', icon: FileText },
   { name: 'CMS', to: '/dashboard/cms', icon: Image },
 ];
 
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useStore();
-  const { signOut } = useAuth();
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   return (
     <>
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen bg-[#030712]/95 backdrop-blur-xl border-r border-white/10 transition-all duration-300 z-30 ${
+        className={`fixed left-0 top-0 h-screen backdrop-blur-xl border-r transition-all duration-300 z-30 ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
+        style={{
+          backgroundColor: 'hsl(var(--card) / 0.95)',
+          borderColor: 'hsl(var(--border))',
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
+          <div 
+            className="h-16 flex items-center justify-between px-4 border-b"
+            style={{ borderColor: 'hsl(var(--border))' }}
+          >
             <div className="flex items-center gap-3">
               {sidebarOpen && (
-                <h1 className="text-xl font-bold text-white">
+                <h1 className="text-xl font-bold" style={{ color: 'hsl(var(--foreground))' }}>
                   Eter Growth
                 </h1>
               )}
             </div>
             <button
               onClick={toggleSidebar}
-              className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
+              className="p-2 hover:bg-accent rounded-lg transition"
+              style={{ 
+                color: 'hsl(var(--muted-foreground))',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'hsl(var(--foreground))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'hsl(var(--muted-foreground))';
+              }}
             >
               {sidebarOpen ? (
                 <ChevronLeft className="w-5 h-5" />
@@ -67,10 +76,26 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-lg transition group ${
                     isActive
-                      ? 'bg-[#7BA8F9]/20 text-[#7BA8F9]'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      ? ''
+                      : ''
                   }`
                 }
+                style={({ isActive }) => ({
+                  backgroundColor: isActive ? 'hsl(var(--primary) / 0.2)' : 'transparent',
+                  color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                })}
+                onMouseEnter={(e) => {
+                  if (!e.currentTarget.getAttribute('data-active')) {
+                    e.currentTarget.style.backgroundColor = 'hsl(var(--accent))';
+                    e.currentTarget.style.color = 'hsl(var(--foreground))';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!e.currentTarget.getAttribute('data-active')) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))';
+                  }
+                }}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && (
@@ -79,24 +104,14 @@ export function Sidebar() {
               </NavLink>
             ))}
           </nav>
-
-          {/* Logout Button */}
-          <div className="p-4 border-t border-white/10">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition"
-            >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">Sair</span>}
-            </button>
-          </div>
         </div>
       </aside>
 
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          className="fixed inset-0 z-20 md:hidden"
+          style={{ backgroundColor: 'hsl(var(--background) / 0.5)' }}
           onClick={toggleSidebar}
         />
       )}

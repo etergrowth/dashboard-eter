@@ -18,17 +18,17 @@ export function useProjects() {
   });
 }
 
+// Local user ID for local-only execution
+const LOCAL_USER_ID = 'local-user';
+
 export function useCreateProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (project: ProjectInsert) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('projects')
-        .insert({ ...project, user_id: user.id })
+        .insert({ ...project, user_id: LOCAL_USER_ID } as any)
         .select()
         .single();
 
@@ -48,6 +48,7 @@ export function useUpdateProject() {
     mutationFn: async ({ id, ...updates }: ProjectUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('projects')
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('id', id)
         .select()
@@ -110,7 +111,7 @@ export function useCreateProjectTask() {
     mutationFn: async (task: ProjectTaskInsert) => {
       const { data, error } = await supabase
         .from('project_tasks')
-        .insert(task)
+        .insert({ ...task, user_id: LOCAL_USER_ID } as any)
         .select()
         .single();
 
@@ -130,6 +131,7 @@ export function useUpdateProjectTask() {
     mutationFn: async ({ id, ...updates }: ProjectTaskUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('project_tasks')
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('id', id)
         .select()

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Users, Plus, Search, Filter, MapPin, Phone, Mail, Building2, Trash2, Edit } from 'lucide-react';
+import { Plus, Filter, MapPin, Phone, Mail, Building2, Trash2, Edit } from 'lucide-react';
 import { useClients, useDeleteClient } from '../../hooks/useClients';
 import { ClientForm } from './ClientForm';
 import type { Client } from '../../../types';
+import { PageHeader, StatsGrid, SearchBar, ActionButton, EmptyState, LoadingState } from '../../components/sections';
+import { Users } from 'lucide-react';
 
 export function CRM() {
   const { data: clients, isLoading } = useClients();
@@ -72,65 +74,52 @@ export function CRM() {
     }
   };
 
+  const stats = [
+    {
+      name: 'Total Clientes',
+      value: clients?.length || 0,
+    },
+    {
+      name: 'Leads',
+      value: clients?.filter((c) => c.status === 'lead').length || 0,
+    },
+    {
+      name: 'Em Negociação',
+      value: clients?.filter((c) => c.status === 'negotiation').length || 0,
+    },
+    {
+      name: 'Fechados',
+      value: clients?.filter((c) => c.status === 'closed').length || 0,
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">CRM</h1>
-          <p className="text-gray-400">
-            Gestão de clientes e pipeline de vendas
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            setEditingClient(undefined);
-            setShowForm(true);
-          }}
-          className="glass-button px-6 py-3 rounded-lg font-semibold text-white flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Cliente
-        </button>
-      </div>
+      <PageHeader
+        title="CRM"
+        description="Gestão de clientes e pipeline de vendas"
+        action={
+          <ActionButton
+            label="Novo Cliente"
+            onClick={() => {
+              setEditingClient(undefined);
+              setShowForm(true);
+            }}
+            icon={Plus}
+          />
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Total Clientes</p>
-          <p className="text-2xl font-bold text-white">{clients?.length || 0}</p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Leads</p>
-          <p className="text-2xl font-bold text-blue-400">
-            {clients?.filter((c) => c.status === 'lead').length || 0}
-          </p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Em Negociação</p>
-          <p className="text-2xl font-bold text-yellow-400">
-            {clients?.filter((c) => c.status === 'negotiation').length || 0}
-          </p>
-        </div>
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Fechados</p>
-          <p className="text-2xl font-bold text-green-400">
-            {clients?.filter((c) => c.status === 'closed').length || 0}
-          </p>
-        </div>
-      </div>
+      <StatsGrid stats={stats} columns={4} />
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchBar
               placeholder="Pesquisar clientes..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+              onChange={setSearchTerm}
             />
           </div>
           <button
@@ -194,10 +183,7 @@ export function CRM() {
 
       {/* Clients List */}
       {isLoading ? (
-        <div className="glass-panel p-12 rounded-xl text-center">
-          <div className="w-12 h-12 border-4 border-[#7BA8F9] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">A carregar clientes...</p>
-        </div>
+        <LoadingState message="A carregar clientes..." />
       ) : filteredClients && filteredClients.length > 0 ? (
         <div className="glass-panel rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -318,29 +304,27 @@ export function CRM() {
           </div>
         </div>
       ) : (
-        <div className="glass-panel p-12 rounded-xl text-center">
-          <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
-            {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente criado'}
-          </h3>
-          <p className="text-gray-400 mb-6">
-            {searchTerm
+        <EmptyState
+          icon={Users}
+          title={searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente criado'}
+          description={
+            searchTerm
               ? 'Tente ajustar os termos de pesquisa'
-              : 'Comece adicionando o seu primeiro cliente'}
-          </p>
-          {!searchTerm && (
-            <button
-              onClick={() => {
-                setEditingClient(undefined);
-                setShowForm(true);
-              }}
-              className="glass-button px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2 hover:bg-[#7BA8F9]/20 transition"
-            >
-              <Plus className="w-5 h-5" />
-              Adicionar Primeiro Cliente
-            </button>
-          )}
-        </div>
+              : 'Comece adicionando o seu primeiro cliente'
+          }
+          action={
+            !searchTerm ? (
+              <ActionButton
+                label="Adicionar Primeiro Cliente"
+                onClick={() => {
+                  setEditingClient(undefined);
+                  setShowForm(true);
+                }}
+                icon={Plus}
+              />
+            ) : undefined
+          }
+        />
       )}
 
       {/* Client Form Modal */}
