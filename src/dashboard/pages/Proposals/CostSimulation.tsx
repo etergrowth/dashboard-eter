@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Plus, Trash2, ChevronDown, ChevronUp, Calculator } from 'lucide-react';
 import { useAllServices } from '../../hooks/useServices';
-import type { Service } from '../../../types';
+
 
 interface CostItem {
   id: string;
@@ -22,78 +22,6 @@ export function CostSimulation() {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [items, setItems] = React.useState<CostItem[]>([]);
   const [finalSellingPrice, setFinalSellingPrice] = React.useState(0);
-  const [globalDesiredMargin, setGlobalDesiredMargin] = React.useState(40);
-
-  // Componente de input numérico personalizado para melhor UX
-  const NumericInput = ({
-    value,
-    onChange,
-    placeholder = "0.00",
-    suffix = "",
-    className = "",
-    allowDecimal = true
-  }: {
-    value: number;
-    onChange: (val: number) => void;
-    placeholder?: string;
-    suffix?: string;
-    className?: string;
-    allowDecimal?: boolean;
-  }) => {
-    const [localValue, setLocalValue] = React.useState<string>(value === 0 ? "" : value.toString());
-    const [isFocused, setIsFocused] = React.useState(false);
-
-    React.useEffect(() => {
-      if (!isFocused) {
-        setLocalValue(value === 0 ? "" : value.toString());
-      }
-    }, [value, isFocused]);
-
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-      setIsFocused(true);
-      e.target.select();
-    };
-
-    const handleBlur = () => {
-      setIsFocused(false);
-      const parsed = parseFloat(localValue.replace(',', '.')) || 0;
-      onChange(parsed);
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let val = e.target.value;
-      // Permitir apenas números e uma vírgula/ponto
-      if (allowDecimal) {
-        val = val.replace(/[^0-9,.]/g, '');
-      } else {
-        val = val.replace(/[^0-9]/g, '');
-      }
-      setLocalValue(val);
-    };
-
-    const displayValue = isFocused
-      ? localValue
-      : (value === 0 ? "" : value.toLocaleString('pt-PT', { minimumFractionDigits: allowDecimal ? 2 : 0, maximumFractionDigits: allowDecimal ? 2 : 0 }));
-
-    return (
-      <div className="relative w-full">
-        <input
-          type="text"
-          value={displayValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          className={`w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${className}`}
-        />
-        {suffix && !isFocused && displayValue && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
-            {suffix}
-          </span>
-        )}
-      </div>
-    );
-  };
 
   // Calcular totais
   const totals = React.useMemo(() => {
@@ -119,38 +47,10 @@ export function CostSimulation() {
     };
   }, [items]);
 
-  // Atualizar preço de venda quando os totais ou a margem global mudarem
+  // Atualizar preço de venda quando os totais mudarem
   React.useEffect(() => {
     setFinalSellingPrice(totals.sellingPrice);
   }, [totals.sellingPrice]);
-
-  const handleGlobalMarginChange = (newMargin: number) => {
-    const margin = Math.max(0, newMargin);
-    setGlobalDesiredMargin(margin);
-    setItems(items.map(item => ({
-      ...item,
-      desiredMargin: margin
-    })));
-  };
-
-  const handleFinalSellingPriceChange = (newPrice: number) => {
-    const price = Math.max(0, newPrice);
-    setFinalSellingPrice(price);
-
-    if (totals.totalBaseCost > 0) {
-      // Calcular a margem que este preço implica: 
-      // (Price - SoftwareCosts) = BaseCost * (1 + Margin/100)
-      // Margin/100 = (Price - SoftwareCosts - BaseCost) / BaseCost
-      const impliedMargin = ((price - totals.totalSoftwareCosts - totals.totalBaseCost) / totals.totalBaseCost) * 100;
-      const roundedMargin = Math.max(0, Math.round(impliedMargin * 10) / 10);
-
-      setGlobalDesiredMargin(roundedMargin);
-      setItems(items.map(item => ({
-        ...item,
-        desiredMargin: roundedMargin
-      })));
-    }
-  };
 
   const handleAddItem = () => {
     if (!services || services.length === 0) {
@@ -370,11 +270,14 @@ export function CostSimulation() {
                     <label className="block text-sm font-medium text-black mb-2">
                       Horas
                     </label>
-                    <NumericInput
-                      value={item.hours}
-                      onChange={(val) => handleHoursChange(item.id, val)}
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={item.hours || ''}
+                      onChange={(e) => handleHoursChange(item.id, parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="0"
-                      suffix="h"
                     />
                   </div>
 
@@ -383,11 +286,14 @@ export function CostSimulation() {
                     <label className="block text-sm font-medium text-black mb-2">
                       Custos Software (€)
                     </label>
-                    <NumericInput
-                      value={item.softwareCosts}
-                      onChange={(val) => handleSoftwareCostsChange(item.id, val)}
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.softwareCosts || ''}
+                      onChange={(e) => handleSoftwareCostsChange(item.id, parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="0.00"
-                      suffix="€"
                     />
                   </div>
 
@@ -396,11 +302,14 @@ export function CostSimulation() {
                     <label className="block text-sm font-medium text-black mb-2">
                       Preço/Hora (€)
                     </label>
-                    <NumericInput
-                      value={item.hourlyRate}
-                      onChange={(val) => handleHourlyRateChange(item.id, val)}
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.hourlyRate || ''}
+                      onChange={(e) => handleHourlyRateChange(item.id, parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="0.00"
-                      suffix="€"
                     />
                     <p className="text-xs text-black mt-1">
                       Base: {Math.round(item.baseCost)}€/h
@@ -413,10 +322,14 @@ export function CostSimulation() {
                   <label className="block text-sm font-medium text-black mb-2">
                     Margem Desejada (%)
                   </label>
-                  <NumericInput
-                    value={item.desiredMargin}
-                    onChange={(val) => handleDesiredMarginChange(item.id, val)}
-                    suffix="%"
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1000"
+                    value={item.desiredMargin || 0}
+                    onChange={(e) => handleDesiredMarginChange(item.id, parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-black text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <p className="text-xs text-black mt-2">
                     Esta margem será aplicada sobre o custo base deste item para calcular o preço de venda sugerido.
@@ -485,45 +398,29 @@ export function CostSimulation() {
         {/* Resumo e preço de venda final */}
         {items.length > 0 && (
           <div className="border-t border-border pt-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Margem Desejada Geral */}
-              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Margem Desejada Geral (%)
-                </label>
-                <NumericInput
-                  value={globalDesiredMargin}
-                  onChange={handleGlobalMarginChange}
-                  suffix="%"
-                  className="text-orange-600 font-semibold"
-                />
-                <p className="text-xs text-black mt-2">
-                  Ajusta a margem de todos os itens simultaneamente.
-                </p>
-              </div>
-
-              {/* Preço de venda final (editável) */}
-              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                <label className="block text-sm font-medium text-black mb-2">
-                  Preço de Venda Final (€)
-                </label>
-                <NumericInput
-                  value={finalSellingPrice}
-                  onChange={handleFinalSellingPriceChange}
-                  suffix="€"
-                  className="text-orange-600 text-lg font-bold"
-                />
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-black">
-                    Margem final: {totals.totalBaseCost > 0
-                      ? (((finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts) / totals.totalBaseCost) * 100).toFixed(1)
-                      : '0.0'
-                    }%
-                  </span>
-                  <span className="text-orange-600 font-medium">
-                    Lucro: {(finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts).toFixed(2)}€
-                  </span>
-                </div>
+            {/* Preço de venda final (editável) */}
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+              <label className="block text-sm font-medium text-black mb-2">
+                Preço de Venda Final (€)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={finalSellingPrice.toFixed(2)}
+                onChange={(e) => setFinalSellingPrice(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 bg-background border border-orange-300 rounded-lg text-orange-600 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+              <div className="mt-2 flex items-center justify-between text-sm">
+                <span className="text-black">
+                  Margem final: {totals.totalBaseCost > 0
+                    ? (((finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts) / totals.totalBaseCost) * 100).toFixed(1)
+                    : '0.0'
+                  }%
+                </span>
+                <span className="text-orange-600 font-medium">
+                  Lucro: {(finalSellingPrice - totals.totalBaseCost - totals.totalSoftwareCosts).toFixed(2)}€
+                </span>
               </div>
             </div>
           </div>
