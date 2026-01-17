@@ -58,6 +58,14 @@ export interface Database {
           priority: string;
           tags: string[] | null;
           notes: string | null;
+          sector: string | null;
+          revenue: string | null;
+          investment: string | null;
+          main_objective: string | null;
+          ai_analysis: string | null;
+          ai_score: number | null;
+          urgency: string | null;
+          source: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -114,6 +122,7 @@ export interface Database {
           type: string;
           title: string;
           description: string | null;
+          location: string | null;
           date: string;
           created_at: string;
         };
@@ -124,6 +133,7 @@ export interface Database {
           type: string;
           title: string;
           description?: string | null;
+          location?: string | null;
           date?: string;
           created_at?: string;
         };
@@ -134,6 +144,7 @@ export interface Database {
           type?: string;
           title?: string;
           description?: string | null;
+          location?: string | null;
           date?: string;
           created_at?: string;
         };

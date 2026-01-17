@@ -9,6 +9,8 @@ import { CRM } from './dashboard/pages/CRM';
 import { Projects } from './dashboard/pages/Projects';
 import { CMS } from './dashboard/pages/CMS';
 import { Proposals } from './dashboard/pages/Proposals';
+import { FormTest } from './dashboard/pages/FormTest';
+import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
 
 function App() {
   return (
@@ -22,9 +24,11 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Overview />} />
             <Route path="crm" element={<CRM />} />
+            <Route path="crm/:id" element={<LeadDetails />} />
             <Route path="projects" element={<Projects />} />
             <Route path="proposals" element={<Proposals />} />
             <Route path="cms" element={<CMS />} />
+            <Route path="formulario" element={<FormTest />} />
           </Route>
 
           {/* Catch all - redirect to dashboard */}

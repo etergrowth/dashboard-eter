@@ -17,3 +17,38 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
   },
 });
+export interface LeadFormData {
+  assunto: string;
+  mensagem: string;
+  projectType: string;
+  budget: string;
+  location?: string;
+  firstName: string;
+  email: string;
+  phone?: string;
+  empresa?: string;
+  privacyConsent: boolean;
+}
+
+export const submitLead = async (formData: LeadFormData) => {
+  try {
+    const { data, error } = await supabase.rpc('submit_form', {
+      p_nome: formData.firstName,
+      p_email: formData.email,
+      p_telefone: formData.phone || null,
+      p_localizacao: formData.location || null,
+      p_tipo_projeto: formData.projectType || null,
+      p_orcamento: formData.budget || null,
+      p_consentimento_privacidade: formData.privacyConsent,
+      p_assunto: formData.assunto,
+      p_mensagem: formData.mensagem,
+      p_empresa: formData.empresa || null
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Erro ao submeter lead:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
+  }
+};

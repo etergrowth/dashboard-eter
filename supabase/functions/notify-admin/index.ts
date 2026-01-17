@@ -1,67 +1,54 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const GMAIL_CLIENT_ID = Deno.env.get("GMAIL_CLIENT_ID");
-const GMAIL_CLIENT_SECRET = Deno.env.get("GMAIL_CLIENT_SECRET");
-const GMAIL_REFRESH_TOKEN = Deno.env.get("GMAIL_REFRESH_TOKEN");
+const GMAIL_CLIENT_ID = Deno.env.get('GMAIL_CLIENT_ID') || '';
+const GMAIL_CLIENT_SECRET = Deno.env.get('GMAIL_CLIENT_SECRET') || '';
+const GMAIL_REFRESH_TOKEN = Deno.env.get('GMAIL_REFRESH_TOKEN') || '';
 const ADMIN_EMAIL = "geral@etergrowth.com";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || "https://ozjafmkfabewxoyibirq.supabase.co";
 
-serve(async (req) => {
+serve(async (req: Request) => {
     if (req.method !== 'POST') {
         return new Response("Method not allowed", { status: 405 });
     }
 
     try {
         const payload = await req.json();
-        const record = payload.record; // Webhook payload
+        const record = payload.record;
 
         if (!record || !record.email) {
-            throw new Error("Invalid payload");
+            console.error("Invalid payload:", payload);
+            return new Response(JSON.stringify({ error: "Invalid payload" }), { status: 200, headers: { "Content-Type": "application/json" } });
         }
 
-        if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
-            throw new Error("Missing Gmail credentials");
-        }
-
-        // 1. Refresh Access Token
         const tokens = await refreshAccessToken(GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN);
         const accessToken = tokens.access_token;
         if (!accessToken) throw new Error("Failed to get access token");
 
-        // 2. Prepare Email
         const approvalLink = `${SUPABASE_URL}/functions/v1/approve-submission?id=${record.id}&action=approve`;
         const rejectLink = `${SUPABASE_URL}/functions/v1/approve-submission?id=${record.id}&action=reject`;
 
-        // Simple HTML Template with Inline CSS for email compatibility
-        const emailBody = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <h2 style="color: #ea580c;">Nova Lead do Website</h2>
-        <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-          <p style="margin: 5px 0;"><strong>Nome:</strong> ${record.nome}</p>
-          <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${record.email}">${record.email}</a></p>
-          <p style="margin: 5px 0;"><strong>Telefone:</strong> ${record.telefone || 'N/A'}</p>
-          <p style="margin: 5px 0;"><strong>Projeto:</strong> ${record.tipo_projeto || 'N/A'}</p>
-           <p style="margin: 5px 0;"><strong>Orçamento:</strong> ${record.orcamento || 'N/A'}</p>
-        </div>
-        
-        <p style="margin-bottom: 20px;">Deseja adicionar esta lead ao CRM?</p>
-        
-        <div style="text-align: center;">
-          <a href="${approvalLink}" style="display: inline-block; padding: 12px 24px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">Aprovar Lead</a>
-          <a href="${rejectLink}" style="display: inline-block; padding: 12px 24px; background-color: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Rejeitar</a>
-        </div>
-        
-        <p style="color: #6b7280; font-size: 12px; margin-top: 30px; text-align: center;">
-          Dashboard Eter Automation
-        </p>
-      </div>
-    `;
+        const htmlBody = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <h2 style="color: #f97316;">Nova Lead do Website</h2>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+                    <p style="margin: 10px 0;"><strong>Nome:</strong> ${record.nome}</p>
+                    <p style="margin: 10px 0;"><strong>Email:</strong> ${record.email}</p>
+                    <p style="margin: 10px 0;"><strong>Empresa:</strong> ${record.empresa || 'N/A'}</p>
+                    <p style="margin: 10px 0;"><strong>Assunto:</strong> ${record.assunto || 'N/A'}</p>
+                    <p style="margin: 10px 0;"><strong>Mensagem:</strong> ${record.mensagem || 'N/A'}</p>
+                </div>
+                <div style="text-align: center;">
+                    <a href="${approvalLink}" style="display: inline-block; padding: 12px 24px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">Aprovar Lead</a>
+                    <a href="${rejectLink}" style="display: inline-block; padding: 12px 24px; background-color: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Rejeitar</a>
+                </div>
+            </div>
+        `;
 
-        // 3. Send Email
-        await sendGmail(accessToken, ADMIN_EMAIL, "🎯 Nova Lead - Aprovação Necessária", emailBody);
+        const subject = `🎯 Nova Lead: ${record.nome}${record.empresa ? ' (' + record.empresa + ')' : ''}`;
+        await sendGmail(accessToken, ADMIN_EMAIL, subject, htmlBody);
 
         return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error:", error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
@@ -87,18 +74,23 @@ async function refreshAccessToken(clientId: string, clientSecret: string, refres
 }
 
 async function sendGmail(accessToken: string, to: string, subject: string, htmlBody: string) {
+    const bytes = new TextEncoder().encode(subject);
+    const binString = bytes.reduce((p, c) => p + String.fromCharCode(c), '');
+    const encodedSubject = `=?utf-8?B?${btoa(binString)}?=`;
+
     const emailLines = [
         `To: ${to}`,
         "Content-Type: text/html; charset=utf-8",
         "MIME-Version: 1.0",
-        `Subject: ${subject}`,
+        `Subject: ${encodedSubject}`,
         "",
         htmlBody
     ];
 
-    // Base64Url encode
     const email = emailLines.join("\n");
-    const encodedEmail = btoa(unescape(encodeURIComponent(email)))
+    const mailBytes = new TextEncoder().encode(email);
+    const mailBinString = mailBytes.reduce((p, c) => p + String.fromCharCode(c), '');
+    const encodedEmail = btoa(mailBinString)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
