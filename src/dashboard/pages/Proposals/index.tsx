@@ -6,32 +6,19 @@ import { ProposalForm } from './ProposalForm';
 import { ProposalItemForm } from './ProposalItemForm';
 import { ServicesTable } from './ServicesTable';
 import { ProposalsTable } from './ProposalsTable';
-import { CostSimulation } from './CostSimulation';
+import { CostSimulationModal } from './CostSimulation';
 import type { Proposal, ProposalItem } from '../../../types';
 import { PageHeader, SearchBar, ActionButton, LoadingState } from '../../components/sections';
 
 export function Proposals() {
-  const { data: proposals, isLoading } = useProposals();
-  const deleteProposal = useDeleteProposal();
+  const { isLoading } = useProposals();
   const [showForm, setShowForm] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | undefined>();
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState<ProposalItem | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredProposals = proposals?.filter((proposal) => {
-    const matchesSearch =
-      proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (proposal.client?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
-
-  const handleDelete = (id: string, title: string) => {
-    if (window.confirm(`Tem a certeza que deseja eliminar a proposta "${title}"?`)) {
-      deleteProposal.mutate(id);
-    }
-  };
+  const [showCostSimulation, setShowCostSimulation] = useState(false);
 
   const handleEdit = (proposal: Proposal) => {
     setEditingProposal(proposal);
@@ -67,57 +54,6 @@ export function Proposals() {
     setEditingItem(undefined);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-muted text-muted-foreground border-border';
-      case 'sent':
-        return 'bg-primary/20 text-primary border-primary/30';
-      case 'negotiating':
-        return 'bg-chart-3/20 border-chart-3/30';
-      case 'accepted':
-        return 'bg-chart-2/20 border-chart-2/30';
-      case 'rejected':
-        return 'bg-destructive/20 text-destructive border-destructive/30';
-      default:
-        return 'bg-muted text-muted-foreground border-border';
-    }
-  };
-  
-  const getStatusTextColor = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'hsl(var(--muted-foreground))';
-      case 'sent':
-        return 'hsl(var(--primary))';
-      case 'negotiating':
-        return 'hsl(var(--chart-3))';
-      case 'accepted':
-        return 'hsl(var(--chart-2))';
-      case 'rejected':
-        return 'hsl(var(--destructive))';
-      default:
-        return 'hsl(var(--muted-foreground))';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'Rascunho';
-      case 'sent':
-        return 'Enviada';
-      case 'negotiating':
-        return 'Em Negociação';
-      case 'accepted':
-        return 'Aceite';
-      case 'rejected':
-        return 'Rejeitada';
-      default:
-        return status;
-    }
-  };
-
   if (isLoading) {
     return <LoadingState message="A carregar propostas..." />;
   }
@@ -131,8 +67,7 @@ export function Proposals() {
           <ActionButton
             label="Nova Proposta"
             onClick={() => {
-              setEditingProposal(undefined);
-              setShowForm(true);
+              setShowCostSimulation(true);
             }}
             icon={Plus}
           />
@@ -149,145 +84,16 @@ export function Proposals() {
       <ServicesTable />
 
       {/* Proposals Table */}
-      <ProposalsTable />
+      <ProposalsTable onAddProposal={() => setShowCostSimulation(true)} />
 
-      {/* Cost Simulation */}
-      <CostSimulation />
-
-      {/* Proposals List */}
-      {selectedProposal ? (
+      {/* Proposal Items View */}
+      {selectedProposal && (
         <ProposalItemsView
           proposal={selectedProposal}
           onClose={handleCloseItems}
           onAddItem={handleAddItem}
           onEditItem={handleEditItem}
         />
-      ) : (
-        <div className="grid gap-4">
-          {filteredProposals && filteredProposals.length > 0 && (
-            filteredProposals.map((proposal) => (
-              <div
-                key={proposal.id}
-                className="glass-panel rounded-lg p-6 transition-colors hover:shadow-lg"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 
-                        className="text-lg font-semibold"
-                        style={{ color: 'hsl(var(--foreground))' }}
-                      >
-                        {proposal.title}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(
-                          proposal.status || 'draft'
-                        )}`}
-                        style={{ 
-                          color: getStatusTextColor(proposal.status || 'draft'),
-                        }}
-                      >
-                        {getStatusLabel(proposal.status || 'draft')}
-                      </span>
-                    </div>
-                    {proposal.client && (
-                      <p 
-                        className="text-sm mb-2"
-                        style={{ color: 'hsl(var(--muted-foreground))' }}
-                      >
-                        Cliente: {proposal.client.name}
-                        {proposal.client.company && ` - ${proposal.client.company}`}
-                      </p>
-                    )}
-                    {proposal.description && (
-                      <p 
-                        className="text-sm mb-3"
-                        style={{ color: 'hsl(var(--muted-foreground))' }}
-                      >
-                        {proposal.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 text-sm">
-                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Total: <span 
-                          className="font-semibold"
-                          style={{ color: 'hsl(var(--foreground))' }}
-                        >
-                          {proposal.total_amount?.toFixed(2) || '0.00'}€
-                        </span>
-                      </span>
-                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Margem: <span 
-                          className="font-semibold"
-                          style={{ color: 'hsl(var(--foreground))' }}
-                        >
-                          {proposal.total_margin?.toFixed(2) || '0.00'}€
-                        </span>
-                      </span>
-                      {proposal.valid_until && (
-                        <span style={{ color: 'hsl(var(--muted-foreground))' }}>
-                          Válida até: {new Date(proposal.valid_until).toLocaleDateString('pt-PT')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <button
-                      onClick={() => handleViewItems(proposal)}
-                      className="p-2 rounded-lg transition-colors"
-                      style={{ 
-                        color: 'hsl(var(--primary))',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'hsl(var(--primary) / 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                      title="Ver itens"
-                    >
-                      <Calculator className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(proposal)}
-                      className="p-2 rounded-lg transition-colors"
-                      style={{ 
-                        color: 'hsl(var(--muted-foreground))',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'hsl(var(--accent))';
-                        e.currentTarget.style.color = 'hsl(var(--foreground))';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = 'hsl(var(--muted-foreground))';
-                      }}
-                      title="Editar"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(proposal.id, proposal.title)}
-                      className="p-2 rounded-lg transition-colors"
-                      style={{ 
-                        color: 'hsl(var(--destructive))',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'hsl(var(--destructive) / 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
       )}
 
       {/* Forms */}
@@ -303,6 +109,16 @@ export function Proposals() {
           onClose={handleCloseItemForm}
           proposalId={selectedProposal.id}
           item={editingItem}
+        />
+      )}
+
+      {/* Cost Simulation Modal (Quiz-style pop-up) */}
+      {showCostSimulation && (
+        <CostSimulationModal
+          onClose={() => setShowCostSimulation(false)}
+          onSuccess={() => {
+            setShowCostSimulation(false);
+          }}
         />
       )}
     </div>

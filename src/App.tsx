@@ -11,6 +11,7 @@ import { CMS } from './dashboard/pages/CMS';
 import { Proposals } from './dashboard/pages/Proposals';
 import { FormTest } from './dashboard/pages/FormTest';
 import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
+import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="crm/:id" element={<LeadDetails />} />
             <Route path="projects" element={<Projects />} />
             <Route path="proposals" element={<Proposals />} />
+            <Route path="proposals/:id" element={<ProposalDetails />} />
             <Route path="cms" element={<CMS />} />
             <Route path="formulario" element={<FormTest />} />
           </Route>

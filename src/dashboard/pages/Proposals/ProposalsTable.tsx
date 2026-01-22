@@ -11,12 +11,18 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useProposals, useCreateProposal, useUpdateProposal, useDeleteProposal } from '../../hooks/useProposals';
 import type { Proposal, ProposalInsert } from '../../../types';
 import { Badge } from '../../../components/ui/badge';
 
-export function ProposalsTable() {
+interface ProposalsTableProps {
+  onAddProposal?: () => void;
+}
+
+export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
+  const navigate = useNavigate();
   const { data: proposals, isLoading } = useProposals();
   const createProposal = useCreateProposal();
   const updateProposal = useUpdateProposal();
@@ -395,11 +401,11 @@ export function ProposalsTable() {
           return (
             <div className="flex items-center justify-end gap-2">
               <button
-                onClick={() => handleEdit(proposal)}
+                onClick={() => navigate(`/dashboard/proposals/${proposal.id}`)}
                 className="p-2 hover:bg-muted/10 rounded-lg transition text-muted-foreground hover:text-card-foreground"
-                title="Editar"
+                title="Ver detalhes"
               >
-                <Edit className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDelete(proposal.id, proposal.title)}
@@ -460,7 +466,13 @@ export function ProposalsTable() {
         </button>
         {!isAdding && isExpanded && (
           <button
-            onClick={() => setIsAdding(true)}
+            onClick={() => {
+              if (onAddProposal) {
+                onAddProposal();
+              } else {
+                setIsAdding(true);
+              }
+            }}
             className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
