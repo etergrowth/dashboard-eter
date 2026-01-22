@@ -166,7 +166,7 @@ export function CRM() {
   const deleteClient = useDeleteClient();
   const updateClient = useUpdateClient();
   const [showForm, setShowForm] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [activeId, setActiveId] = useState<string | null>(null);

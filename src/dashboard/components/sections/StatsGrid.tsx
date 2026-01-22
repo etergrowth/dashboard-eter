@@ -20,7 +20,7 @@ export function StatsGrid({ stats, columns = 4 }: StatsGridProps) {
   };
 
   return (
-    <div className={`grid grid-cols-1 ${gridCols[columns]} gap-4`}>
+    <div className={`grid grid-cols-2 ${gridCols[columns]} gap-4`}>
       {stats.map((stat) => (
         <StatCard
           key={stat.name}

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail OAuth - Obter Refresh Token</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #1a202c;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .step h3 {
+            display: inline-block;
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .step p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .code-block {
+            background: #1a202c;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .code-block.json {
+            color: #fbd38d;
+        }
+
+        .alert {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .alert h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .alert p {
+            color: #4a5568;
+            margin: 0;
+        }
+
+        .copy-btn {
+            background: #48bb78;
+            font-size: 14px;
+            padding: 8px 16px;
+            margin-top: 8px;
+        }
+
+        #result {
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Gmail OAuth 2.0</h1>
+        <p class="subtitle">Ferramenta para obter Refresh Token do Gmail API</p>
+
+        <!-- Passo 1: Configuração -->
+        <div class="step">
+            <span class="step-number">1</span>
+            <h3>Configurar Credenciais</h3>
+            <p>Insira o Client ID e Client Secret obtidos no Google Cloud Console</p>
+            
+            <div class="input-group">
+                <label for="clientId">Client ID:</label>
+                <input type="text" id="clientId" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
+            </div>
+
+            <div class="input-group">
+                <label for="clientSecret">Client Secret:</label>
+                <input type="text" id="clientSecret" placeholder="GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+
+            <div class="input-group">
+                <label for="redirectUri">Redirect URI:</label>
+                <input type="text" id="redirectUri" value="http://localhost:5173/auth/callback" readonly>
+            </div>
+        </div>
+
+        <!-- Passo 2: Autenticar -->
+        <div class="step">
+            <span class="step-number">2</span>
+            <h3>Autenticar com Google</h3>
+            <p>Clique no botão abaixo para iniciar o fluxo OAuth</p>
+            <button id="authBtn" class="btn" onclick="authenticate()">
+                🚀 Autenticar com Google
+            </button>
+        </div>
+
+        <!-- Resultado -->
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const SCOPE = 'https://www.googleapis.com/auth/gmail.send';
+
+        function authenticate() {
+            const clientId = document.getElementById('clientId').value.trim();
+            const clientSecret = document.getElementById('clientSecret').value.trim();
+            const redirectUri = document.getElementById('redirectUri').value.trim();
+
+            // Validar inputs
+            if (!clientId || !clientSecret) {
+                alert('⚠️ Por favor, preencha o Client ID e Client Secret');
+                return;
+            }
+
+            // Guardar em localStorage para usar depois do redirect
+            localStorage.setItem('gmail_client_id', clientId);
+            localStorage.setItem('gmail_client_secret', clientSecret);
+            localStorage.setItem('gmail_redirect_uri', redirectUri);
+
+            // Construir URL de autorização
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                `client_id=${encodeURIComponent(clientId)}&` +
+                `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                `response_type=code&` +
+                `scope=${encodeURIComponent(SCOPE)}&` +
+                `access_type=offline&` +
+                `prompt=consent`;
+
+            // Redirecionar
+            window.location.href = authUrl;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                alert('❌ Erro ao copiar. Por favor, copie manualmente.');
+            });
+        }
+
+        // Verificar se voltou do redirect
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+
+            if (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert">
+                        <h4>❌ Erro na Autenticação</h4>
+                        <p>Erro: ${error}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (code) {
+                // Recuperar credenciais do localStorage
+                const clientId = localStorage.getItem('gmail_client_id');
+                const clientSecret = localStorage.getItem('gmail_client_secret');
+                const redirectUri = localStorage.getItem('gmail_redirect_uri');
+
+                // Preencher campos
+                document.getElementById('clientId').value = clientId;
+                document.getElementById('clientSecret').value = clientSecret;
+                document.getElementById('redirectUri').value = redirectUri;
+
+                // Mostrar instruções
+                const curlCommand = `curl -X POST https://oauth2.googleapis.com/token \\
+  -d "client_id=${clientId}" \\
+  -d "client_secret=${clientSecret}" \\
+  -d "code=${code}" \\
+  -d "redirect_uri=${redirectUri}" \\
+  -d "grant_type=authorization_code"`;
+
+                const fetchCommand = `fetch('https://oauth2.googleapis.com/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    client_id: '${clientId}',
+    client_secret: '${clientSecret}',
+    code: '${code}',
+    redirect_uri: '${redirectUri}',
+    grant_type: 'authorization_code'
+  })
+})
+.then(r => r.json())
+.then(data => console.log(data));`;
+
+                document.getElementById('result').innerHTML = `
+                    <div class="step alert-success">
+                        <span class="step-number">3</span>
+                        <h3>✅ Código Recebido!</h3>
+                        <p>Agora execute um dos comandos abaixo para obter o Refresh Token:</p>
+
+                        <h4 style="margin-top: 20px; color: #2d3748;">Opção 1: Via CURL (Terminal)</h4>
+                        <div class="code-block">${curlCommand}</div>
+                        <button class="btn copy-btn" onclick="copyToClipboard(\`${curlCommand.replace(/`/g, '\\`')}\`)">
+                            📋 Copiar Comando CURL
+                        </button>
+
+                        <h4 style="margin-top: 20px; color: #2d3748;">Opção 2: Via Browser Console (F12)</h4>
+                        <div class="code-block">${fetchCommand}</div>
+                        <button class="btn copy-btn" onclick="copyToClipboard(\`${fetchCommand.replace(/`/g, '\\`')}\`)">
+                            📋 Copiar Comando Fetch
+                        </button>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">4</span>
+                        <h3>Copiar Refresh Token</h3>
+                        <p>Após executar o comando, você receberá uma resposta JSON como esta:</p>
+                        <div class="code-block json">{
+  "access_token": "ya29.xxx...",
+  "expires_in": 3599,
+  "refresh_token": "1//xxx...",
+  "scope": "https://www.googleapis.com/auth/gmail.send",
+  "token_type": "Bearer"
+}</div>
+                        <p><strong>Copie o valor de "refresh_token"</strong> e adicione ao ficheiro <code>.env.local</code>:</p>
+                        <div class="code-block">VITE_GMAIL_REFRESH_TOKEN=1//xxx...</div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <h4>🎉 Configuração Completa!</h4>
+                        <p>Agora já pode enviar emails através da Gmail API. Não esqueça de adicionar todas as credenciais ao <code>.env.local</code>!</p>
+                    </div>
+                `;
+
+                // Limpar URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+    </script>
+</body>
+</html>

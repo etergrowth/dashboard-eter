@@ -1,4 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import {
   LayoutDashboard,
   Users,
@@ -7,8 +9,10 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
+import { useIsMobile } from '../../hooks/use-mobile';
 
 const navigation = [
   { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
@@ -19,11 +23,32 @@ const navigation = [
 ];
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar } = useStore();
+  const { sidebarOpen, toggleSidebar, setSidebarOpen } = useStore();
+  const isMobile = useIsMobile();
+  const location = useLocation();
 
-  return (
-    <>
-      {/* Sidebar */}
+  // Fechar sidebar no mobile quando a rota mudar
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+
+  // Prevenir scroll do body quando sidebar mobile está aberta
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // Desktop Sidebar
+  if (!isMobile) {
+    return (
       <aside
         className={`fixed left-0 top-0 h-screen backdrop-blur-xl border-r transition-all duration-300 z-30 ${
           sidebarOpen ? 'w-64' : 'w-20'
@@ -91,15 +116,109 @@ export function Sidebar() {
           </nav>
         </div>
       </aside>
+    );
+  }
 
-      {/* Mobile overlay */}
+  // Mobile Sidebar com comportamento nativo
+  return (
+    <AnimatePresence>
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 md:hidden"
-          style={{ backgroundColor: 'hsl(var(--background) / 0.5)' }}
-          onClick={toggleSidebar}
-        />
+        <>
+          {/* Overlay com blur */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 md:hidden"
+            style={{ 
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)',
+            }}
+            onClick={toggleSidebar}
+          />
+
+          {/* Drawer Sidebar */}
+          <motion.aside
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{
+              type: 'spring',
+              damping: 30,
+              stiffness: 300,
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(event, info: PanInfo) => {
+              // Fechar se arrastar mais de 50% para a esquerda
+              if (info.offset.x < -100 || info.velocity.x < -500) {
+                setSidebarOpen(false);
+              }
+            }}
+            className="fixed left-0 top-0 h-screen w-72 z-50 md:hidden"
+            style={{
+              backgroundColor: 'hsl(var(--card))',
+              borderRight: '1px solid hsl(var(--border))',
+              boxShadow: '2px 0 8px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            <div className="flex flex-col h-full">
+              {/* Header com logo e botão fechar */}
+              <div 
+                className="h-16 flex items-center justify-between px-4 border-b"
+                style={{ borderColor: 'hsl(var(--border))' }}
+              >
+                <h1 
+                  className="text-xl font-bold" 
+                  style={{ color: 'hsl(var(--foreground))' }}
+                >
+                  Eter Growth
+                </h1>
+                <button
+                  onClick={toggleSidebar}
+                  className="p-2 hover:bg-accent rounded-lg transition active:scale-95"
+                  style={{ 
+                    color: 'hsl(var(--muted-foreground))',
+                  }}
+                  aria-label="Fechar menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation */}
+              <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                {navigation.map((item, index) => (
+                  <motion.div
+                    key={item.to}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <NavLink
+                      to={item.to}
+                      end={item.to === '/dashboard'}
+                      onClick={toggleSidebar}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all active:scale-[0.98] ${
+                          isActive
+                            ? 'bg-primary/20 text-primary'
+                            : 'text-muted-foreground active:bg-accent'
+                        }`
+                      }
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="font-medium text-base">{item.name}</span>
+                    </NavLink>
+                  </motion.div>
+                ))}
+              </nav>
+            </div>
+          </motion.aside>
+        </>
       )}
-    </>
+    </AnimatePresence>
   );
 }

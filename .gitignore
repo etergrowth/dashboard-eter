@@ -50,5 +50,9 @@ Thumbs.db
 .tmp/
 credentials.json
 token.json
-directives/
-execution/
+# Note: directives/ and execution/ folders are tracked, but temporary outputs are ignored
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/

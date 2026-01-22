@@ -8,7 +8,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 
           className="text-3xl font-bold mb-2"
@@ -22,7 +22,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
           </p>
         )}
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="flex items-center">{action}</div>}
     </div>
   );
 }

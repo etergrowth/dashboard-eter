@@ -10,4 +10,6 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  // Permitir importação de ficheiros HTML como strings
+  assetsInclude: ['**/*.html'],
 });
