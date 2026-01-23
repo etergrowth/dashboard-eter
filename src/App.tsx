@@ -2,6 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 
+// Auth Components
+import { Login } from './pages/Login';
+import { ResetPassword } from './pages/ResetPassword';
+import { Unauthorized } from './pages/Unauthorized';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
 // Dashboard Components
 import { DashboardLayout } from './dashboard/layouts/DashboardLayout';
 import { Overview } from './dashboard/pages/Overview';
@@ -12,29 +18,38 @@ import { Proposals } from './dashboard/pages/Proposals';
 import { FormTest } from './dashboard/pages/FormTest';
 import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
 import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
+import { Services } from './dashboard/pages/Services';
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Root redirects to dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Dashboard Routes */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Overview />} />
-            <Route path="crm" element={<CRM />} />
-            <Route path="crm/:id" element={<LeadDetails />} />
-            <Route path="projects" element={<Projects />} />
-            <Route path="proposals" element={<Proposals />} />
-            <Route path="proposals/:id" element={<ProposalDetails />} />
-            <Route path="cms" element={<CMS />} />
-            <Route path="formulario" element={<FormTest />} />
+          {/* Protected Routes - Require Authentication */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* Dashboard Routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Overview />} />
+              <Route path="crm" element={<CRM />} />
+              <Route path="crm/:id" element={<LeadDetails />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="proposals" element={<Proposals />} />
+              <Route path="proposals/:id" element={<ProposalDetails />} />
+              <Route path="services" element={<Services />} />
+              <Route path="cms" element={<CMS />} />
+              <Route path="formulario" element={<FormTest />} />
+            </Route>
           </Route>
 
-          {/* Catch all - redirect to dashboard */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

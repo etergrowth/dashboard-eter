@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Plus, Trash2, Edit, X, Calculator } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Trash2, Edit, X, Calculator, Settings } from 'lucide-react';
 import { useProposals, useDeleteProposal } from '../../hooks/useProposals';
 import { useProposalItems, useDeleteProposalItem } from '../../hooks/useProposals';
 import { ProposalForm } from './ProposalForm';
 import { ProposalItemForm } from './ProposalItemForm';
-import { ServicesTable } from './ServicesTable';
 import { ProposalsTable } from './ProposalsTable';
 import { CostSimulationModal } from './CostSimulation';
 import type { Proposal, ProposalItem } from '../../../types';
 import { PageHeader, SearchBar, ActionButton, LoadingState } from '../../components/sections';
 
 export function Proposals() {
+  const navigate = useNavigate();
   const { isLoading } = useProposals();
   const [showForm, setShowForm] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | undefined>();
@@ -64,13 +65,20 @@ export function Proposals() {
         title="Propostas"
         description="Gerir e criar propostas para clientes"
         action={
-          <ActionButton
-            label="Nova Proposta"
-            onClick={() => {
-              setShowCostSimulation(true);
-            }}
-            icon={Plus}
-          />
+          <div className="flex gap-3">
+            <ActionButton
+              label="Gerir Serviços"
+              onClick={() => navigate('/dashboard/services')}
+              icon={Settings}
+            />
+            <ActionButton
+              label="Nova Proposta"
+              onClick={() => {
+                setShowCostSimulation(true);
+              }}
+              icon={Plus}
+            />
+          </div>
         }
       />
 
@@ -79,9 +87,6 @@ export function Proposals() {
         value={searchTerm}
         onChange={setSearchTerm}
       />
-
-      {/* Services Table */}
-      <ServicesTable />
 
       {/* Proposals Table */}
       <ProposalsTable onAddProposal={() => setShowCostSimulation(true)} />

@@ -17,6 +17,8 @@
     "@googlemaps/extended-component-library": "^0.6.14",
     "@hookform/resolvers": "^5.2.2",
     "@openai/chatkit-react": "^1.2.0",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
     "@react-google-maps/api": "^2.20.7",
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.90.10",

@@ -11,11 +11,13 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown, Eye, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useProposals, useCreateProposal, useUpdateProposal, useDeleteProposal } from '../../hooks/useProposals';
 import type { Proposal, ProposalInsert } from '../../../types';
 import { Badge } from '../../../components/ui/badge';
+import { Checkbox } from '../../../components/ui/checkbox';
+import { convertToCSV, downloadCSV } from '../../../utils/export';
 
 interface ProposalsTableProps {
   onAddProposal?: () => void;
@@ -30,7 +32,7 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
 
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -179,6 +181,25 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
 
   const columns: ColumnDef<Proposal & { client?: { name: string; company: string | null } | null }>[] = React.useMemo(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Selecionar todas"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Selecionar linha"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: "title",
         header: ({ column }) => {
@@ -433,12 +454,84 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
+      rowSelection,
     },
   });
+
+  const handleBulkDelete = async () => {
+    const selectedRowIds = Object.keys(rowSelection);
+    if (selectedRowIds.length === 0) return;
+    
+    // Get proposal IDs from selected rows
+    const selectedProposalIds = table.getRowModel().rows
+      .filter(row => rowSelection[row.id])
+      .map(row => row.original.id);
+    
+    if (selectedProposalIds.length === 0) return;
+    
+    if (window.confirm(`Tem a certeza que deseja eliminar ${selectedProposalIds.length} proposta(s)?`)) {
+      try {
+        await Promise.all(selectedProposalIds.map(id => deleteProposal.mutateAsync(id)));
+        setRowSelection({});
+      } catch (error) {
+        console.error('Erro ao eliminar propostas:', error);
+        alert('Erro ao eliminar algumas propostas. Por favor, tente novamente.');
+      }
+    }
+  };
+
+  const handleBulkStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const status = e.target.value;
+    if (!status) return;
+    
+    const selectedRowIds = Object.keys(rowSelection);
+    if (selectedRowIds.length === 0) return;
+
+    // Get proposal IDs from selected rows
+    const selectedProposalIds = table.getRowModel().rows
+      .filter(row => rowSelection[row.id])
+      .map(row => row.original.id);
+
+    if (selectedProposalIds.length === 0) return;
+
+    try {
+      await Promise.all(
+        selectedProposalIds.map(id => updateProposal.mutateAsync({ id, status }))
+      );
+      setRowSelection({});
+      e.target.value = '';
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro ao atualizar status. Por favor, tente novamente.');
+    }
+  };
+
+  const handleBulkExport = () => {
+    const selectedRowIds = Object.keys(rowSelection);
+    if (selectedRowIds.length === 0) {
+      alert('Selecione pelo menos uma proposta para exportar.');
+      return;
+    }
+
+    // Get selected proposals by matching row IDs with proposal indices
+    const selectedProposals = table.getRowModel().rows
+      .filter(row => rowSelection[row.id])
+      .map(row => row.original) || [];
+    
+    if (selectedProposals.length === 0) {
+      alert('Nenhuma proposta encontrada para exportar.');
+      return;
+    }
+
+    const csv = convertToCSV(selectedProposals);
+    downloadCSV(csv, `propostas_${new Date().toISOString().split('T')[0]}.csv`);
+  };
 
   if (isLoading) {
     return (
@@ -448,23 +541,13 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
     );
   }
 
+  const selectedCount = Object.keys(rowSelection).length;
+
   return (
-    <div className={`glass-panel rounded-xl transition-all duration-300 ${
-      isExpanded ? 'p-6' : 'p-4'
-    }`}>
-      <div className={`flex items-center justify-between ${isExpanded ? 'mb-6' : 'mb-0'}`}>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-lg font-semibold text-card-foreground hover:text-primary transition-colors"
-        >
-          {isExpanded ? (
-            <ChevronUp className="w-5 h-5" />
-          ) : (
-            <ChevronDown className="w-5 h-5" />
-          )}
-          <span>Tabela de Propostas</span>
-        </button>
-        {!isAdding && isExpanded && (
+    <div className="glass-panel rounded-xl p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold text-card-foreground">Tabela de Propostas</h2>
+        {!isAdding && (
           <button
             onClick={() => {
               if (onAddProposal) {
@@ -481,11 +564,45 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
         )}
       </div>
 
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
+      {/* Bulk Actions Bar */}
+      {selectedCount > 0 && (
+        <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg mb-4 border border-primary/20">
+          <span className="text-sm font-medium text-card-foreground">
+            {selectedCount} proposta(s) selecionada(s)
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBulkDelete}
+              disabled={deleteProposal.isPending}
+              className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition text-sm font-medium disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4 inline mr-2" />
+              Apagar
+            </button>
+            <select
+              onChange={handleBulkStatusChange}
+              defaultValue=""
+              className="px-4 py-2 bg-secondary border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            >
+              <option value="">Mudar status...</option>
+              <option value="draft">Rascunho</option>
+              <option value="sent">Enviada</option>
+              <option value="negotiating">Em Negociação</option>
+              <option value="accepted">Aceite</option>
+              <option value="rejected">Rejeitada</option>
+            </select>
+            <button
+              onClick={handleBulkExport}
+              className="px-4 py-2 bg-secondary hover:bg-accent text-foreground rounded-lg transition text-sm font-medium flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Exportar
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div>
         <div className="flex items-center py-4">
           <input
             placeholder="Filtrar propostas..."
@@ -524,6 +641,9 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
               <tbody className="divide-y divide-border">
                 {isAdding && (
                   <tr className="bg-primary/5">
+                    <td className="px-4 py-3">
+                      {/* Checkbox column - empty for new row */}
+                    </td>
                     <td className="px-4 py-3">
                       <input
                         type="text"

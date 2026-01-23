@@ -1,11 +1,22 @@
-import { X } from 'lucide-react';
+import { X, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../lib/store';
 import { useIsMobile } from '../../hooks/use-mobile';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
 
 export function Header() {
   const { toggleSidebar, sidebarOpen } = useStore();
   const isMobile = useIsMobile();
+  const { signOut, user } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
 
   return (
     <header 
@@ -52,8 +63,23 @@ export function Header() {
         </motion.button>
       )}
 
-      {/* Espaço vazio no desktop para manter layout */}
-      {!isMobile && <div />}
+      {/* User info e logout */}
+      <div className="flex items-center gap-2">
+        {user?.email && (
+          <span className="hidden md:block text-sm text-muted-foreground">
+            {user.email}
+          </span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleLogout}
+          title="Fazer logout"
+          className="h-9 w-9"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
+      </div>
     </header>
   );
 }

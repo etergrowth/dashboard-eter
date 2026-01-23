@@ -7,6 +7,7 @@ import {
   Briefcase,
   Image,
   FileText,
+  Settings,
   ChevronLeft,
   ChevronRight,
   X,
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'CRM', to: '/dashboard/crm', icon: Users },
   { name: 'Projetos', to: '/dashboard/projects', icon: Briefcase },
   { name: 'Propostas', to: '/dashboard/proposals', icon: FileText },
+  { name: 'Serviços', to: '/dashboard/services', icon: Settings },
   { name: 'CMS', to: '/dashboard/cms', icon: Image },
 ];
 
