@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Edit, X, Calculator, Settings } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Calculator, Settings, FileText } from 'lucide-react';
 import { useProposals, useDeleteProposal } from '../../hooks/useProposals';
 import { useProposalItems, useDeleteProposalItem } from '../../hooks/useProposals';
 import { ProposalForm } from './ProposalForm';
 import { ProposalItemForm } from './ProposalItemForm';
 import { ProposalsTable } from './ProposalsTable';
+import { ServicesTable } from './ServicesTable';
 import { CostSimulationModal } from './CostSimulation';
 import type { Proposal, ProposalItem } from '../../../types';
 import { PageHeader, SearchBar, ActionButton, LoadingState } from '../../components/sections';
 
+type TabType = 'proposals' | 'services';
+
 export function Proposals() {
-  const navigate = useNavigate();
   const { isLoading } = useProposals();
+  const [activeTab, setActiveTab] = useState<TabType>('proposals');
   const [showForm, setShowForm] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | undefined>();
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -55,7 +57,7 @@ export function Proposals() {
     setEditingItem(undefined);
   };
 
-  if (isLoading) {
+  if (isLoading && activeTab === 'proposals') {
     return <LoadingState message="A carregar propostas..." />;
   }
 
@@ -63,14 +65,9 @@ export function Proposals() {
     <div className="space-y-6">
       <PageHeader
         title="Propostas"
-        description="Gerir e criar propostas para clientes"
+        description={activeTab === 'proposals' ? "Gerir e criar propostas para clientes" : "Gerir serviços, preços e configurações de tarifas"}
         action={
-          <div className="flex gap-3">
-            <ActionButton
-              label="Gerir Serviços"
-              onClick={() => navigate('/dashboard/services')}
-              icon={Settings}
-            />
+          activeTab === 'proposals' ? (
             <ActionButton
               label="Nova Proposta"
               onClick={() => {
@@ -78,21 +75,64 @@ export function Proposals() {
               }}
               icon={Plus}
             />
-          </div>
+          ) : null
         }
       />
 
-      <SearchBar
-        placeholder="Pesquisar propostas..."
-        value={searchTerm}
-        onChange={setSearchTerm}
-      />
+      {/* Tabs Navigation */}
+      <div className="flex gap-2 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+        <button
+          onClick={() => setActiveTab('proposals')}
+          className={`px-4 py-2 font-medium transition-colors relative ${
+            activeTab === 'proposals'
+              ? 'text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          style={{
+            borderBottom: activeTab === 'proposals' ? '2px solid hsl(var(--primary))' : 'none',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            <span>Propostas</span>
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('services')}
+          className={`px-4 py-2 font-medium transition-colors relative ${
+            activeTab === 'services'
+              ? 'text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          style={{
+            borderBottom: activeTab === 'services' ? '2px solid hsl(var(--primary))' : 'none',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            <span>Serviços</span>
+          </div>
+        </button>
+      </div>
 
-      {/* Proposals Table */}
-      <ProposalsTable onAddProposal={() => setShowCostSimulation(true)} />
+      {/* Tab Content */}
+      {activeTab === 'proposals' ? (
+        <>
+          <SearchBar
+            placeholder="Pesquisar propostas..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
 
-      {/* Proposal Items View */}
-      {selectedProposal && (
+          {/* Proposals Table */}
+          <ProposalsTable onAddProposal={() => setShowCostSimulation(true)} />
+        </>
+      ) : (
+        <ServicesTable />
+      )}
+
+      {/* Proposal Items View - Only show in proposals tab */}
+      {activeTab === 'proposals' && selectedProposal && (
         <ProposalItemsView
           proposal={selectedProposal}
           onClose={handleCloseItems}
@@ -101,15 +141,15 @@ export function Proposals() {
         />
       )}
 
-      {/* Forms */}
-      {showForm && (
+      {/* Forms - Only show in proposals tab */}
+      {activeTab === 'proposals' && showForm && (
         <ProposalForm
           onClose={handleCloseForm}
           proposal={editingProposal}
         />
       )}
 
-      {showItemForm && selectedProposal && (
+      {activeTab === 'proposals' && showItemForm && selectedProposal && (
         <ProposalItemForm
           onClose={handleCloseItemForm}
           proposalId={selectedProposal.id}
@@ -117,8 +157,8 @@ export function Proposals() {
         />
       )}
 
-      {/* Cost Simulation Modal (Quiz-style pop-up) */}
-      {showCostSimulation && (
+      {/* Cost Simulation Modal (Quiz-style pop-up) - Only show in proposals tab */}
+      {activeTab === 'proposals' && showCostSimulation && (
         <CostSimulationModal
           onClose={() => setShowCostSimulation(false)}
           onSuccess={() => {

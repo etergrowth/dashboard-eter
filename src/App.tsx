@@ -18,7 +18,6 @@ import { Proposals } from './dashboard/pages/Proposals';
 import { FormTest } from './dashboard/pages/FormTest';
 import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
 import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
-import { Services } from './dashboard/pages/Services';
 
 function App() {
   return (
@@ -42,7 +41,6 @@ function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="proposals" element={<Proposals />} />
               <Route path="proposals/:id" element={<ProposalDetails />} />
-              <Route path="services" element={<Services />} />
               <Route path="cms" element={<CMS />} />
               <Route path="formulario" element={<FormTest />} />
             </Route>
