@@ -21,10 +21,17 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoadingEmailPassword, setIsLoadingEmailPassword] = useState(false);
 
-  // Se já está autenticado, redirecionar para dashboard
+  // Se já está autenticado, redirecionar para a rota pretendida
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      // Verificar se há uma rota de retorno armazenada
+      const returnTo = sessionStorage.getItem('returnTo');
+      if (returnTo && returnTo.startsWith('/dashboard')) {
+        sessionStorage.removeItem('returnTo');
+        navigate(returnTo, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, [isAuthenticated, navigate]);
 
@@ -74,8 +81,14 @@ export const Login = () => {
         }
       }
 
-      // Redirecionar para dashboard
-      navigate('/dashboard', { replace: true });
+      // Redirecionar para a rota pretendida ou dashboard
+      const returnTo = sessionStorage.getItem('returnTo');
+      if (returnTo && returnTo.startsWith('/dashboard')) {
+        sessionStorage.removeItem('returnTo');
+        navigate(returnTo, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       setError(

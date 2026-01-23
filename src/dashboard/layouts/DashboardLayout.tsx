@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { Sidebar } from '../components/Sidebar';
 import { Header } from '../components/Header';
 import { useStore } from '../../lib/store';
@@ -20,6 +21,7 @@ export function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

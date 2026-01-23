@@ -10,6 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Target,
+  Wallet,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { useIsMobile } from '../../hooks/use-mobile';
@@ -17,8 +19,10 @@ import { useIsMobile } from '../../hooks/use-mobile';
 const navigation = [
   { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { name: 'CRM', to: '/dashboard/crm', icon: Users },
+  { name: 'Prospecção', to: '/dashboard/sandbox', icon: Target },
   { name: 'Projetos', to: '/dashboard/projects', icon: Briefcase },
   { name: 'Propostas', to: '/dashboard/proposals', icon: FileText },
+  { name: 'Finanças', to: '/dashboard/finance', icon: Wallet },
   { name: 'CMS', to: '/dashboard/cms', icon: Image },
 ];
 

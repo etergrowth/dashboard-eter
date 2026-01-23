@@ -98,10 +98,16 @@ export const useAuth = () => {
    * Fazer login com Google OAuth
    */
   const signInWithGoogle = async () => {
+    // Armazenar a rota atual para redirecionar após login
+    const currentPath = window.location.pathname;
+    const redirectPath = currentPath.startsWith('/dashboard') 
+      ? currentPath 
+      : '/dashboard';
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}${redirectPath}`,
       },
     });
 

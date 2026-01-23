@@ -442,6 +442,144 @@ export interface Database {
           updated_at?: string | null;
         };
       };
+      categorias_transacoes: {
+        Row: {
+          id: string;
+          nome: string;
+          nome_display: string;
+          cor: string | null;
+          icone: string | null;
+          tipo: string | null;
+          ativa: boolean | null;
+          ordem: number | null;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          nome_display: string;
+          cor?: string | null;
+          icone?: string | null;
+          tipo?: string | null;
+          ativa?: boolean | null;
+          ordem?: number | null;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          nome_display?: string;
+          cor?: string | null;
+          icone?: string | null;
+          tipo?: string | null;
+          ativa?: boolean | null;
+          ordem?: number | null;
+          criado_em?: string;
+        };
+      };
+      transacoes_financeiras: {
+        Row: {
+          id: string;
+          user_id: string;
+          tipo: string;
+          valor: number;
+          moeda: string | null;
+          data_transacao: string;
+          comerciante: string | null;
+          descricao: string;
+          categoria: string;
+          recibo_url: string | null;
+          recibo_filename: string | null;
+          estado: string | null;
+          confianca_ai: number | null;
+          extraido_via: string | null;
+          criado_em: string;
+          atualizado_em: string;
+          verificado_em: string | null;
+          metadata: Json | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tipo: string;
+          valor: number;
+          moeda?: string | null;
+          data_transacao: string;
+          comerciante?: string | null;
+          descricao: string;
+          categoria: string;
+          recibo_url?: string | null;
+          recibo_filename?: string | null;
+          estado?: string | null;
+          confianca_ai?: number | null;
+          extraido_via?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+          verificado_em?: string | null;
+          metadata?: Json | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tipo?: string;
+          valor?: number;
+          moeda?: string | null;
+          data_transacao?: string;
+          comerciante?: string | null;
+          descricao?: string;
+          categoria?: string;
+          recibo_url?: string | null;
+          recibo_filename?: string | null;
+          estado?: string | null;
+          confianca_ai?: number | null;
+          extraido_via?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+          verificado_em?: string | null;
+          metadata?: Json | null;
+        };
+      };
+      recibos_transacoes: {
+        Row: {
+          id: string;
+          transacao_id: string | null;
+          user_id: string;
+          filename: string;
+          file_path: string;
+          file_size: number | null;
+          mime_type: string | null;
+          ocr_text: string | null;
+          ocr_processed: boolean | null;
+          ocr_processed_at: string | null;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          transacao_id?: string | null;
+          user_id: string;
+          filename: string;
+          file_path: string;
+          file_size?: number | null;
+          mime_type?: string | null;
+          ocr_text?: string | null;
+          ocr_processed?: boolean | null;
+          ocr_processed_at?: string | null;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          transacao_id?: string | null;
+          user_id?: string;
+          filename?: string;
+          file_path?: string;
+          file_size?: number | null;
+          mime_type?: string | null;
+          ocr_text?: string | null;
+          ocr_processed?: boolean | null;
+          ocr_processed_at?: string | null;
+          criado_em?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

@@ -18,6 +18,9 @@ import { Proposals } from './dashboard/pages/Proposals';
 import { FormTest } from './dashboard/pages/FormTest';
 import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
 import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
+import { LeadsQueue, LeadDetail, MetricsDashboard } from './dashboard/pages/Sandbox';
+import { Finance } from './dashboard/pages/Finance';
+import { FinanceStatistics } from './dashboard/pages/Finance/Statistics';
 
 function App() {
   return (
@@ -43,6 +46,11 @@ function App() {
               <Route path="proposals/:id" element={<ProposalDetails />} />
               <Route path="cms" element={<CMS />} />
               <Route path="formulario" element={<FormTest />} />
+              <Route path="finance" element={<Finance />} />
+              <Route path="finance/estatisticas" element={<FinanceStatistics />} />
+              <Route path="sandbox" element={<LeadsQueue />} />
+              <Route path="sandbox/:id" element={<LeadDetail />} />
+              <Route path="sandbox/metrics" element={<MetricsDashboard />} />
             </Route>
           </Route>
 

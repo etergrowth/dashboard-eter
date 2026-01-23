@@ -23,6 +23,11 @@ export const ProtectedRoute = () => {
 
   // Se não está autenticado ou email não autorizado, redirecionar para login
   if (!isAuthenticated) {
+    // Armazenar a rota atual para redirecionar após login
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/login' && currentPath.startsWith('/dashboard')) {
+      sessionStorage.setItem('returnTo', currentPath);
+    }
     return <Navigate to="/login" replace />;
   }
 
