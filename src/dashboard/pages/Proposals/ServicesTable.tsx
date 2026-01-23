@@ -11,7 +11,7 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowUpDown } from 'lucide-react';
 import { useAllServices, useCreateService, useUpdateService, useDeleteService } from '../../hooks/useServices';
 import type { Service, ServiceInsert } from '../../../types';
 
@@ -23,7 +23,6 @@ export function ServicesTable() {
 
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
-  const [isExpanded, setIsExpanded] = React.useState(false);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -297,25 +296,15 @@ export function ServicesTable() {
   }
 
   return (
-    <div className={`glass-panel rounded-xl transition-all duration-300 ${
-      isExpanded ? 'p-6' : 'p-4'
-    }`}>
-      <div className={`flex items-center justify-between ${isExpanded ? 'mb-6' : 'mb-0'}`}>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-lg font-semibold text-card-foreground hover:text-primary transition-colors"
-        >
-          {isExpanded ? (
-            <ChevronUp className="w-5 h-5" />
-          ) : (
-            <ChevronDown className="w-5 h-5" />
-          )}
-          <span>Tabela de Serviços</span>
-        </button>
-        {!isAdding && isExpanded && (
+    <div className="glass-panel rounded-xl transition-all duration-300 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold text-card-foreground">
+          Tabela de Serviços
+        </h2>
+        {!isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium"
+            className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium hover:bg-primary/10 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Adicionar Serviço
@@ -323,11 +312,7 @@ export function ServicesTable() {
         )}
       </div>
 
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
+      <div>
         <div className="flex items-center py-4">
           <input
             placeholder="Filtrar serviços..."
