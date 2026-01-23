@@ -21,8 +21,8 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  // Permitir importação de ficheiros HTML como strings
-  assetsInclude: ['**/*.html'],
+  // Permitir importação de ficheiros HTML como strings (exceto index.html)
+  assetsInclude: ['emails_html/**/*.html'],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
