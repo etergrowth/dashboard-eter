@@ -63,7 +63,10 @@ export function Header() {
         </motion.button>
       )}
 
-      {/* User info e logout */}
+      {/* Spacer para empurrar conteúdo à direita */}
+      <div className="flex-1" />
+
+      {/* User info e logout - à direita */}
       <div className="flex items-center gap-2">
         {user?.email && (
           <span className="hidden md:block text-sm text-muted-foreground">
