@@ -53,19 +53,22 @@
 ### 2. Configurar Redirect URLs
 
 1. Ir em: **Authentication** > **URL Configuration**
-2. Adicionar às **Redirect URLs**:
+2. Adicionar às **Redirect URLs** (uma por linha):
    ```
+   https://dashboard-eter.vercel.app/reset-password
+   https://dashboard-eter.vercel.app/dashboard
    http://localhost:3000/reset-password
-   http://localhost:54321/reset-password
+   http://localhost:3000/dashboard
    ```
-   (Adicionar URL de produção quando aplicável)
 
 ### 3. Configurar Site URL
 
 1. Ir em: **Authentication** > **URL Configuration**
 2. **Site URL:**
-   - Desenvolvimento: `http://localhost:3000`
-   - Produção: `https://etergrowth.com` (quando aplicável)
+   - **Produção:** `https://dashboard-eter.vercel.app` (IMPORTANTE: usar esta para produção)
+   - **Desenvolvimento:** `http://localhost:3000` (apenas para testes locais)
+   
+   **⚠️ CRÍTICO:** A "Site URL" é usada pelo Supabase para gerar links de email. Se estiver configurada como localhost, todos os emails vão redirecionar para localhost mesmo em produção!
 
 ### 4. Configurar Signup Settings
 

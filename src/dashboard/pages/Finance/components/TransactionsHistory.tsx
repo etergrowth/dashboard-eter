@@ -168,7 +168,7 @@ export function TransactionsHistory({ onReceiptClick }: TransactionsHistoryProps
                     {formatCurrency(transaction.valor, transaction.tipo)}
                   </td>
                   <td className="py-3 px-2 text-center">
-                    {transaction.recibo_url && (
+                    {(transaction.recibo_url || transaction.id) && (
                       <button
                         onClick={() => onReceiptClick?.(transaction.id)}
                         className="text-muted-foreground hover:text-primary transition-colors"

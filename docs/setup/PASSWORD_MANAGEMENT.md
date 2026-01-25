@@ -28,9 +28,11 @@
 Se quiseres implementar uma página de alteração de password na aplicação:
 
 ```typescript
+import { getRedirectUrl } from '@/lib/url-helper';
+
 // Para reset de password (quando esquecida)
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: `${window.location.origin}/reset-password`,
+  redirectTo: getRedirectUrl('/reset-password'),
 });
 
 // Para alterar password (quando autenticado)

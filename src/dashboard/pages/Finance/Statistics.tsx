@@ -106,28 +106,22 @@ export function FinanceStatistics() {
       />
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Receitas */}
         <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <p className="text-sm font-medium transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
               Total Receitas
             </p>
-            <DollarSign className="h-4 w-4" style={{ color: 'hsl(var(--chart-2))' }} />
+            <DollarSign className="h-4 w-4 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
           </div>
           <p 
-            className="text-2xl font-bold transition-colors duration-300"
-            style={{ color: 'hsl(var(--chart-2))' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--primary))';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--chart-2))';
-            }}
+            className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+            style={{ color: 'hsl(var(--foreground))' }}
           >
             {formatCurrency(statistics.totalReceitas)}
           </p>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             Todas as receitas verificadas
           </p>
         </div>
@@ -135,24 +129,18 @@ export function FinanceStatistics() {
         {/* Total Despesas */}
         <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <p className="text-sm font-medium transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
               Total Despesas
             </p>
-            <ArrowDownRight className="h-4 w-4" style={{ color: 'hsl(var(--destructive))' }} />
+            <ArrowDownRight className="h-4 w-4 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
           </div>
           <p 
-            className="text-2xl font-bold transition-colors duration-300"
-            style={{ color: 'hsl(var(--destructive))' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--primary))';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--destructive))';
-            }}
+            className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+            style={{ color: 'hsl(var(--foreground))' }}
           >
             {formatCurrency(statistics.totalDespesas)}
           </p>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             Todas as despesas verificadas
           </p>
         </div>
@@ -160,34 +148,22 @@ export function FinanceStatistics() {
         {/* Lucro/Prejuízo */}
         <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <p className="text-sm font-medium transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
               Lucro / Prejuízo
             </p>
             {statistics.lucroPrejuizo >= 0 ? (
-              <TrendingUp className="h-4 w-4" style={{ color: 'hsl(var(--chart-2))' }} />
+              <TrendingUp className="h-4 w-4 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             ) : (
-              <TrendingDown className="h-4 w-4" style={{ color: 'hsl(var(--destructive))' }} />
+              <TrendingDown className="h-4 w-4 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             )}
           </div>
           <p 
-            className="text-2xl font-bold transition-colors duration-300"
-            style={{ 
-              color: statistics.lucroPrejuizo >= 0 
-                ? 'hsl(var(--chart-2))' 
-                : 'hsl(var(--destructive))' 
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--primary))';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = statistics.lucroPrejuizo >= 0 
-                ? 'hsl(var(--chart-2))' 
-                : 'hsl(var(--destructive))';
-            }}
+            className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+            style={{ color: 'hsl(var(--foreground))' }}
           >
             {formatCurrency(statistics.lucroPrejuizo)}
           </p>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             {statistics.percentualLucro >= 0 ? '+' : ''}
             {statistics.percentualLucro.toFixed(1)}% margem
           </p>
@@ -196,105 +172,87 @@ export function FinanceStatistics() {
         {/* Mês Atual */}
         <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <p className="text-sm font-medium transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
               Mês Atual
             </p>
-            <ArrowUpRight className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} />
+            <ArrowUpRight className="h-4 w-4 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
           </div>
           <p 
-            className="text-2xl font-bold transition-colors duration-300"
-            style={{ color: 'hsl(var(--primary))' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--foreground))';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'hsl(var(--primary))';
-            }}
+            className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+            style={{ color: 'hsl(var(--foreground))' }}
           >
             {formatCurrency(statistics.mesAtual.lucro)}
           </p>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             {statistics.mesAtual.numTransacoes} transações
           </p>
         </div>
       </div>
 
       {/* Tendências */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm font-medium mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
+          <p className="text-sm font-medium mb-3 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             Variação de Receitas
           </p>
           <div className="flex items-center gap-2">
             {statistics.tendencias.receitasVariacao >= 0 ? (
-              <TrendingUp className="h-5 w-5" style={{ color: 'hsl(var(--chart-2))' }} />
+              <TrendingUp className="h-5 w-5 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             ) : (
-              <TrendingDown className="h-5 w-5" style={{ color: 'hsl(var(--destructive))' }} />
+              <TrendingDown className="h-5 w-5 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             )}
             <span
-              className="text-2xl font-bold"
-              style={{
-                color: statistics.tendencias.receitasVariacao >= 0
-                  ? 'hsl(var(--chart-2))'
-                  : 'hsl(var(--destructive))'
-              }}
+              className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+              style={{ color: 'hsl(var(--foreground))' }}
             >
               {formatPercent(statistics.tendencias.receitasVariacao)}
             </span>
           </div>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             vs. mês anterior
           </p>
         </div>
 
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm font-medium mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
+        <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
+          <p className="text-sm font-medium mb-3 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             Variação de Despesas
           </p>
           <div className="flex items-center gap-2">
             {statistics.tendencias.despesasVariacao >= 0 ? (
-              <TrendingUp className="h-5 w-5" style={{ color: 'hsl(var(--destructive))' }} />
+              <TrendingUp className="h-5 w-5 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             ) : (
-              <TrendingDown className="h-5 w-5" style={{ color: 'hsl(var(--chart-2))' }} />
+              <TrendingDown className="h-5 w-5 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             )}
             <span
-              className="text-2xl font-bold"
-              style={{
-                color: statistics.tendencias.despesasVariacao >= 0
-                  ? 'hsl(var(--destructive))'
-                  : 'hsl(var(--chart-2))'
-              }}
+              className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+              style={{ color: 'hsl(var(--foreground))' }}
             >
               {formatPercent(statistics.tendencias.despesasVariacao)}
             </span>
           </div>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             vs. mês anterior
           </p>
         </div>
 
-        <div className="glass-panel p-4 rounded-lg">
-          <p className="text-sm font-medium mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
+        <div className="glass-panel p-4 rounded-lg group transition-all duration-300 hover:shadow-lg">
+          <p className="text-sm font-medium mb-3 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             Variação de Lucro
           </p>
           <div className="flex items-center gap-2">
             {statistics.tendencias.lucroVariacao >= 0 ? (
-              <TrendingUp className="h-5 w-5" style={{ color: 'hsl(var(--chart-2))' }} />
+              <TrendingUp className="h-5 w-5 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             ) : (
-              <TrendingDown className="h-5 w-5" style={{ color: 'hsl(var(--destructive))' }} />
+              <TrendingDown className="h-5 w-5 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }} />
             )}
             <span
-              className="text-2xl font-bold"
-              style={{
-                color: statistics.tendencias.lucroVariacao >= 0
-                  ? 'hsl(var(--chart-2))'
-                  : 'hsl(var(--destructive))'
-              }}
+              className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+              style={{ color: 'hsl(var(--foreground))' }}
             >
               {formatPercent(statistics.tendencias.lucroVariacao)}
             </span>
           </div>
-          <p className="text-xs mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]" style={{ color: 'hsl(var(--foreground))' }}>
             vs. mês anterior
           </p>
         </div>
@@ -399,36 +357,62 @@ export function FinanceStatistics() {
             </h3>
           </div>
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statistics.gastosPorCategoria.map((g) => ({
-                    ...g,
-                    name: getCategoriaDisplayName(g.categoria),
-                  }))}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="total"
-                >
-                  {statistics.gastosPorCategoria.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: `1px solid hsl(var(--border))`,
-                    borderRadius: '8px',
-                    color: 'hsl(var(--card-foreground))',
-                  }}
-                  formatter={(value: number) => formatCurrency(value)}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex items-center gap-6">
+              <div className="flex-1" style={{ maxWidth: '300px' }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={statistics.gastosPorCategoria.map((g) => ({
+                        ...g,
+                        name: getCategoriaDisplayName(g.categoria),
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="total"
+                    >
+                      {statistics.gastosPorCategoria.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: `1px solid hsl(var(--border))`,
+                        borderRadius: '8px',
+                        color: 'hsl(var(--card-foreground))',
+                      }}
+                      formatter={(value: number) => formatCurrency(value)}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-3">
+                {statistics.gastosPorCategoria.map((g, index) => {
+                  const totalGastos = statistics.gastosPorCategoria.reduce((sum, item) => sum + item.total, 0);
+                  const percent = totalGastos > 0 ? (g.total / totalGastos) * 100 : 0;
+                  return (
+                    <div key={g.categoria} className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-sm"
+                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                          {getCategoriaDisplayName(g.categoria)}
+                        </p>
+                        <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                          {formatCurrency(g.total)} • {percent.toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -440,36 +424,62 @@ export function FinanceStatistics() {
             </h3>
           </div>
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statistics.receitasPorCategoria.map((r) => ({
-                    ...r,
-                    name: getCategoriaDisplayName(r.categoria),
-                  }))}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="total"
-                >
-                  {statistics.receitasPorCategoria.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: `1px solid hsl(var(--border))`,
-                    borderRadius: '8px',
-                    color: 'hsl(var(--card-foreground))',
-                  }}
-                  formatter={(value: number) => formatCurrency(value)}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex items-center gap-6">
+              <div className="flex-1" style={{ maxWidth: '300px' }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={statistics.receitasPorCategoria.map((r) => ({
+                        ...r,
+                        name: getCategoriaDisplayName(r.categoria),
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="total"
+                    >
+                      {statistics.receitasPorCategoria.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: `1px solid hsl(var(--border))`,
+                        borderRadius: '8px',
+                        color: 'hsl(var(--card-foreground))',
+                      }}
+                      formatter={(value: number) => formatCurrency(value)}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-3">
+                {statistics.receitasPorCategoria.map((r, index) => {
+                  const totalReceitas = statistics.receitasPorCategoria.reduce((sum, item) => sum + item.total, 0);
+                  const percent = totalReceitas > 0 ? (r.total / totalReceitas) * 100 : 0;
+                  return (
+                    <div key={r.categoria} className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-sm"
+                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                          {getCategoriaDisplayName(r.categoria)}
+                        </p>
+                        <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                          {formatCurrency(r.total)} • {percent.toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -524,6 +534,7 @@ export function FinanceStatistics() {
                 dataKey="total" 
                 fill="hsl(var(--destructive))"
                 radius={[8, 8, 0, 0]}
+                cursor={false}
               />
             </BarChart>
           </ResponsiveContainer>

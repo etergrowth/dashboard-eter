@@ -41,6 +41,7 @@ Thumbs.db
 
 # Supabase
 .supabase/
+supabase/setup_service_role_key.sql
 
 # Other
 *.log

@@ -14,27 +14,21 @@ export function StatCard({ name, value, subtext, onClick }: StatCardProps) {
       onClick={onClick}
     >
       <p 
-        className="text-sm mb-1"
-        style={{ color: 'hsl(var(--muted-foreground))' }}
+        className="text-sm mb-1 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+        style={{ color: 'hsl(var(--foreground))' }}
       >
         {name}
       </p>
       <p 
-        className="text-2xl font-bold transition-colors duration-300"
+        className="text-2xl font-bold transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
         style={{ color: 'hsl(var(--foreground))' }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'hsl(var(--primary))';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'hsl(var(--foreground))';
-        }}
       >
         {value}
       </p>
       {subtext && (
         <p 
-          className="text-xs mt-2"
-          style={{ color: 'hsl(var(--muted-foreground))' }}
+          className="text-xs mt-2 transition-colors duration-300 group-hover:text-[hsl(var(--primary))]"
+          style={{ color: 'hsl(var(--foreground))' }}
         >
           {subtext}
         </p>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, TrendingUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getRedirectUrl } from '@/lib/url-helper';
 
 /**
  * Página de Login com Google OAuth e Email/Password
@@ -120,7 +121,7 @@ export const Login = () => {
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: getRedirectUrl('/reset-password'),
       });
 
       if (resetError) throw resetError;

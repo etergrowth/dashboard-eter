@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
+import { getRedirectUrl } from '@/lib/url-helper';
 
 // Lista de emails autorizados (equipa interna Eter)
 const ALLOWED_EMAILS = [
@@ -107,7 +108,7 @@ export const useAuth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}${redirectPath}`,
+        redirectTo: getRedirectUrl(redirectPath),
       },
     });
 

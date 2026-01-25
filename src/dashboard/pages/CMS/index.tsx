@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { Upload, Folder, FileText, Trash2, Download, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useMediaFiles, useUploadFile, useDeleteFile } from '../../hooks/useMediaFiles';
 import { PageHeader, StatsGrid, ActionButton, LoadingState, EmptyState } from '../../components/sections';
+import { InvoiceDetailModal } from './components/InvoiceDetailModal';
+import type { MediaFile } from '@/types';
 
 export function CMS() {
   const { data: mediaFiles, isLoading } = useMediaFiles();
@@ -11,6 +13,7 @@ export function CMS() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<MediaFile | null>(null);
 
   // Form state for upload metadata
   const [uploadMetadata, setUploadMetadata] = useState({
@@ -204,7 +207,15 @@ export function CMS() {
       ) : mediaFiles && mediaFiles.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {mediaFiles.map((file) => (
-            <div key={file.id} className="glass-panel rounded-xl overflow-hidden group">
+            <div 
+              key={file.id} 
+              className="glass-panel rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => {
+                if (file.category === 'invoice') {
+                  setSelectedInvoice(file);
+                }
+              }}
+            >
               {/* File Preview */}
               <div className="aspect-video bg-muted/10 flex items-center justify-center relative overflow-hidden">
                 {isImage(file.file_type) && file.public_url ? (
@@ -215,6 +226,11 @@ export function CMS() {
                   />
                 ) : (
                   <FileText className="w-16 h-16 text-muted-foreground" />
+                )}
+                {file.category === 'invoice' && (
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                    Fatura
+                  </div>
                 )}
               </div>
 
@@ -269,6 +285,15 @@ export function CMS() {
           icon={Folder}
           title="Biblioteca vazia"
           description="Faça upload de imagens e ficheiros para começar"
+        />
+      )}
+
+      {/* Invoice Detail Modal */}
+      {selectedInvoice && (
+        <InvoiceDetailModal
+          file={selectedInvoice}
+          isOpen={!!selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
         />
       )}
     </div>
