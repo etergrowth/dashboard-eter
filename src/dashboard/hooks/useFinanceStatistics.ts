@@ -52,24 +52,44 @@ export function useFinanceStatistics() {
   return useQuery({
     queryKey: ['finance_statistics'],
     queryFn: async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:54',message:'Query function started',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       // Obter user_id atual
-      const { data: { user } } = await supabase.auth.getUser();
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:56',message:'Getting user from auth',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:58',message:'User auth result',data:{hasUser:!!user,hasError:!!userError,errorMessage:userError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       if (!user) throw new Error('Utilizador não autenticado');
 
       // Buscar todas as transações verificadas do utilizador
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:60',message:'Fetching transactions from database',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       const { data: transactions, error } = await supabase
         .from('transacoes_financeiras')
         .select('*')
         .eq('user_id', user.id)
         .eq('estado', 'verificado')
         .order('data_transacao', { ascending: true });
-
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:67',message:'Transactions query result',data:{hasData:!!transactions,dataLength:transactions?.length||0,hasError:!!error,errorMessage:error?.message,errorCode:error?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       if (error) throw error;
 
       const transacoes = transactions as TransacaoFinanceira[];
 
       // Se não houver transações, retornar mock data para visualização
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:72',message:'Checking transaction count',data:{count:transacoes.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       if (transacoes.length === 0) {
+        // #region agent log
+        fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:73',message:'Returning mock statistics',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         return getMockStatistics();
       }
 
@@ -102,7 +122,7 @@ export function useFinanceStatistics() {
       // Tendências
       const tendencias = calcularTendencias(transacoes);
 
-      return {
+      const result = {
         totalReceitas,
         totalDespesas,
         lucroPrejuizo,
@@ -113,6 +133,15 @@ export function useFinanceStatistics() {
         mesAtual,
         tendencias,
       } as FinanceStatistics;
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:115',message:'Returning calculated statistics',data:{hasResult:!!result,keys:Object.keys(result)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      return result;
+    },
+    onError: (error: any) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinanceStatistics.ts:117',message:'Query error caught',data:{errorMessage:error?.message,errorStack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
     },
   });
 }

@@ -3,10 +3,28 @@ import { supabase } from '../../lib/supabase';
 import type { UploadedFile } from '../../types/finance';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+// PDFs não são suportados pelo OpenAI Vision - apenas imagens
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+
+interface OCRResult {
+  success: boolean;
+  transacao_id?: string;
+  extracted_data?: {
+    tipo: 'despesa' | 'receita';
+    valor: number;
+    moeda: string;
+    data: string;
+    comerciante: string;
+    descricao: string;
+    categoria: string;
+    confianca: number;
+  };
+  error?: string;
+}
 
 export function useReceiptUpload() {
   const [uploading, setUploading] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,11 +143,67 @@ export function useReceiptUpload() {
     if (error) throw error;
   };
 
+  const processReceipt = async (reciboId: string, filePath: string, userId: string): Promise<OCRResult> => {
+    setProcessing(true);
+    setError(null);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('process-receipt-ocr', {
+        body: {
+          recibo_id: reciboId,
+          file_path: filePath,
+          user_id: userId,
+        },
+      });
+
+      if (fnError) {
+        throw new Error(fnError.message || 'Erro ao processar recibo');
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro desconhecido ao processar recibo');
+      }
+
+      return data as OCRResult;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro ao processar recibo com OCR';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const uploadAndProcess = async (file: File): Promise<{ uploaded: UploadedFile; ocr: OCRResult } | null> => {
+    try {
+      const uploaded = await uploadFile(file);
+
+      if (!uploaded.reciboId) {
+        throw new Error('Erro ao criar registo do recibo');
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilizador não autenticado');
+      }
+
+      const ocr = await processReceipt(uploaded.reciboId, uploaded.path, user.id);
+
+      return { uploaded, ocr };
+    } catch (err: any) {
+      setError(err.message || 'Erro ao fazer upload e processar ficheiro');
+      return null;
+    }
+  };
+
   return {
     uploadFile,
+    processReceipt,
+    uploadAndProcess,
     getSignedUrl,
     deleteFile,
     uploading,
+    processing,
     progress,
     error,
   };

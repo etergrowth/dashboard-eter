@@ -42,7 +42,7 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
       start_date: formData.start_date || null,
       end_date: formData.end_date || null,
       budget: formData.budget ? Number(formData.budget) : null,
-      user_id: '', // Will be set by the hook
+      user_id: '', // Será definido automaticamente pelo hook usando auth.uid()
     };
 
     if (project) {
@@ -56,16 +56,16 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel p-6 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-border rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+          <h2 className="text-2xl font-bold text-foreground">
             {project ? 'Editar Projeto' : 'Novo Projeto'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
+            className="p-2 hover:bg-secondary rounded-xl transition text-muted-foreground hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -74,10 +74,10 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Informação Básica</h3>
+            <h3 className="text-lg font-semibold text-foreground">Informacao Basica</h3>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Nome do Projeto *
               </label>
               <input
@@ -86,34 +86,34 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 placeholder="Website Institucional"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Descrição
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Descricao
               </label>
               <textarea
                 name="description"
                 value={formData.description || ''}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition resize-none"
-                placeholder="Descrição detalhada do projeto..."
+                className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
+                placeholder="Descricao detalhada do projeto..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Cliente
               </label>
               <select
                 name="client_id"
                 value={formData.client_id || ''}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
               >
                 <option value="">Sem cliente associado</option>
                 {clients?.map((client) => (
@@ -127,42 +127,42 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
 
           {/* Project Details */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Detalhes do Projeto</h3>
+            <h3 className="text-lg font-semibold text-foreground">Detalhes do Projeto</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Status
                 </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 >
                   <option value="planning">Planeamento</option>
-                  <option value="in_progress">Em Progresso</option>
+                  <option value="active">Em Progresso</option>
                   <option value="on_hold">Pausado</option>
-                  <option value="completed">Concluído</option>
+                  <option value="completed">Concluido</option>
                   <option value="cancelled">Cancelado</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Data de Início
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Data de Inicio
                 </label>
                 <input
                   type="date"
                   name="start_date"
                   value={formData.start_date || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Data de Fim
                 </label>
                 <input
@@ -170,13 +170,13 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
                   name="end_date"
                   value={formData.end_date || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Orçamento (€)
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Orcamento (EUR)
                 </label>
                 <input
                   type="number"
@@ -184,7 +184,7 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
                   value={formData.budget || ''}
                   onChange={handleChange}
                   step="0.01"
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                   placeholder="0.00"
                 />
               </div>
@@ -192,11 +192,11 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
           </div>
 
           {/* Submit */}
-          <div className="flex items-center gap-4 pt-4">
+          <div className="flex items-center gap-4 pt-4 border-t border-border">
             <button
               type="submit"
               disabled={createProject.isPending || updateProject.isPending}
-              className="flex-1 glass-button py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 hover:bg-[#7BA8F9]/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-primary hover:bg-primary/90 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createProject.isPending || updateProject.isPending ? (
                 <>
@@ -213,7 +213,7 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 rounded-lg font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition"
+              className="px-6 py-3 rounded-xl font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition"
             >
               Cancelar
             </button>

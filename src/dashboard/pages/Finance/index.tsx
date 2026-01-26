@@ -82,9 +82,43 @@ export function Finance() {
     setShowUpload(false);
   };
 
-  const handleFileUploaded = async (reciboId: string) => {
+  const handleFileUploaded = async (reciboId: string, transacaoId?: string) => {
     try {
-      // Buscar informações do recibo para obter file_path
+      // Se a transação já foi criada pelo processamento direto
+      if (transacaoId) {
+        // Buscar a transação criada
+        const { data: transacao, error: transacaoError } = await supabase
+          .from('transacoes_financeiras')
+          .select('*')
+          .eq('id', transacaoId)
+          .single();
+
+        if (transacaoError || !transacao) {
+          toast.error('Erro ao obter transação processada');
+          return;
+        }
+
+        // Converter transação para draft
+        const draftData: TransactionDraft = {
+          tipo: transacao.tipo,
+          valor: transacao.valor,
+          moeda: transacao.moeda,
+          data_transacao: transacao.data_transacao,
+          comerciante: transacao.comerciante,
+          descricao: transacao.descricao,
+          categoria: transacao.categoria,
+          recibo_url: transacao.recibo_url,
+          recibo_filename: transacao.recibo_filename,
+          extraido_via: 'ocr',
+          confianca_ai: transacao.confianca_ai,
+          metadata: transacao.metadata,
+        };
+        setDraft(draftData);
+        setShowUpload(false);
+        return;
+      }
+
+      // Fallback: aguardar processamento por trigger (se configurado)
       const { data: recibo, error } = await supabase
         .from('recibos_transacoes')
         .select('file_path, filename')
@@ -96,13 +130,9 @@ export function Finance() {
         return;
       }
 
-      // Definir estado de processamento
       setProcessingReceiptId(reciboId);
       setProcessingFilePath(recibo.file_path);
       toast.info('A processar recibo com AI...');
-      
-      // A transação será criada automaticamente pelo trigger
-      // O useEffect acima monitora quando ela aparece via Realtime
     } catch (error: any) {
       toast.error(error.message || TEXTS_PT.toastError);
       setProcessingReceiptId(null);

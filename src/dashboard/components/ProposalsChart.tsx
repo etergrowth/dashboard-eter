@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useProposals } from '../hooks/useProposals';
 import type { Proposal } from '../../types';
 
@@ -16,17 +16,39 @@ export function ProposalsChart() {
 
   const chartData = useMemo(() => {
     if (!proposals || proposals.length === 0) {
-      // Generate empty data for last 30 days if no proposals
+      // Generate mock data for last 30 days if no proposals
       const data: ChartDataPoint[] = [];
       const today = new Date();
+      
+      // Base values with some variation
+      let baseTotal = 5;
+      let baseAccepted = 3;
+      let baseRejected = 2;
+      
       for (let i = 29; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
+        
+        // Add realistic variation (weekend effect, trends)
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const weekFactor = isWeekend ? 0.6 : 1.0; // Less activity on weekends
+        
+        // Trend: slight increase over time
+        const trendFactor = 1 + (29 - i) * 0.02;
+        
+        // Random variation
+        const randomVariation = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+        
+        const total = Math.max(0, Math.round(baseTotal * weekFactor * trendFactor * randomVariation));
+        const accepted = Math.max(0, Math.round(baseAccepted * weekFactor * trendFactor * randomVariation * (0.9 + Math.random() * 0.2)));
+        const rejected = Math.max(0, total - accepted);
+        
         data.push({
           date: date.toISOString().split('T')[0],
-          total: 0,
-          accepted: 0,
-          rejected: 0,
+          total,
+          accepted,
+          rejected,
         });
       }
       return data;
@@ -70,14 +92,21 @@ export function ProposalsChart() {
   }, [proposals]);
 
   const totals = useMemo(() => {
-    if (!proposals) return { total: 0, accepted: 0, rejected: 0 };
+    if (!proposals || proposals.length === 0) {
+      // Calculate totals from chartData (mock data)
+      return {
+        total: chartData.reduce((sum, d) => sum + d.total, 0),
+        accepted: chartData.reduce((sum, d) => sum + d.accepted, 0),
+        rejected: chartData.reduce((sum, d) => sum + d.rejected, 0),
+      };
+    }
     
     return {
       total: proposals.length,
       accepted: proposals.filter(p => p.status === 'accepted').length,
       rejected: proposals.filter(p => p.status === 'rejected').length,
     };
-  }, [proposals]);
+  }, [proposals, chartData]);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -185,12 +214,8 @@ export function ProposalsChart() {
           <LineChart
             data={chartData}
             margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+            style={{ background: 'transparent' }}
           >
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke="hsl(var(--border))" 
-              opacity={0.3} 
-            />
             <XAxis
               dataKey="date"
               tickLine={false}

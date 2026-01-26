@@ -30,6 +30,10 @@ const sourceConfig: Record<LeadSource, { label: string; className: string }> = {
     label: 'Porta-a-Porta',
     className: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
   },
+  inbound: {
+    label: 'Inbound',
+    className: 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30',
+  },
 };
 
 export function SourceBadge({ source }: SourceBadgeProps) {

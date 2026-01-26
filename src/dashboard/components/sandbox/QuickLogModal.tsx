@@ -65,74 +65,78 @@ export function QuickLogModal({ leadId, open, onClose }: QuickLogModalProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent side="right" className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Registo Rápido de Atividade</SheetTitle>
-        </SheetHeader>
+      <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <SheetHeader className="mb-6 pb-0">
+            <SheetTitle className="text-left">Registo Rápido de Atividade</SheetTitle>
+          </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <Label htmlFor="type">Tipo de Atividade</Label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value as ActivityType)}
-              className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {activityTypes.map((activity) => (
-                <option key={activity.value} value={activity.value}>
-                  {activity.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <form onSubmit={handleSubmit} id="quick-log-form" className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-sm font-medium">Tipo de Atividade</Label>
+              <select
+                id="type"
+                value={type}
+                onChange={(e) => setType(e.target.value as ActivityType)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {activityTypes.map((activity) => (
+                  <option key={activity.value} value={activity.value}>
+                    {activity.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {(type === 'email_sent' || type === 'email_received') && (
-            <div>
-              <Label htmlFor="subject">Assunto (opcional)</Label>
-              <Input
-                id="subject"
-                value={metadata.subject || ''}
-                onChange={(e) => setMetadata({ ...metadata, subject: e.target.value })}
-                placeholder="Assunto do email"
-                className="mt-1"
+            {(type === 'email_sent' || type === 'email_received') && (
+              <div className="space-y-2">
+                <Label htmlFor="subject" className="text-sm font-medium">Assunto (opcional)</Label>
+                <Input
+                  id="subject"
+                  value={metadata.subject || ''}
+                  onChange={(e) => setMetadata({ ...metadata, subject: e.target.value })}
+                  placeholder="Assunto do email"
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {(type === 'call_outbound' || type === 'call_inbound') && (
+              <div className="space-y-2">
+                <Label htmlFor="duration" className="text-sm font-medium">Duração (minutos, opcional)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  value={metadata.duration ? metadata.duration / 60 : ''}
+                  onChange={(e) => 
+                    setMetadata({ 
+                      ...metadata, 
+                      duration: e.target.value ? parseInt(e.target.value) * 60 : undefined 
+                    })
+                  }
+                  placeholder="Duração em minutos"
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">Descrição *</Label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descreva a atividade..."
+                required
+                rows={6}
+                className="w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none min-h-[120px]"
               />
             </div>
-          )}
+          </form>
+        </div>
 
-          {(type === 'call_outbound' || type === 'call_inbound') && (
-            <div>
-              <Label htmlFor="duration">Duração (minutos, opcional)</Label>
-              <Input
-                id="duration"
-                type="number"
-                value={metadata.duration ? metadata.duration / 60 : ''}
-                onChange={(e) => 
-                  setMetadata({ 
-                    ...metadata, 
-                    duration: e.target.value ? parseInt(e.target.value) * 60 : undefined 
-                  })
-                }
-                placeholder="Duração em minutos"
-                className="mt-1"
-              />
-            </div>
-          )}
-
-          <div>
-            <Label htmlFor="description">Descrição *</Label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descreva a atividade..."
-              required
-              rows={5}
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-            />
-          </div>
-
-          <div className="flex gap-2 pt-4">
+        <div className="border-t bg-background px-6 py-4">
+          <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
@@ -143,13 +147,14 @@ export function QuickLogModal({ leadId, open, onClose }: QuickLogModalProps) {
             </Button>
             <Button
               type="submit"
+              form="quick-log-form"
               disabled={createActivity.isPending || !description.trim()}
               className="flex-1"
             >
               {createActivity.isPending ? 'A guardar...' : 'Guardar Atividade'}
             </Button>
           </div>
-        </form>
+        </div>
       </SheetContent>
     </Sheet>
   );

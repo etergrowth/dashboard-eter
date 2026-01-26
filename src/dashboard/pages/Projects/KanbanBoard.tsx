@@ -8,9 +8,9 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { id: 'todo', title: 'A Fazer', color: 'bg-blue-500/20 border-blue-500/30' },
-  { id: 'doing', title: 'Em Progresso', color: 'bg-yellow-500/20 border-yellow-500/30' },
-  { id: 'done', title: 'Concluído', color: 'bg-green-500/20 border-green-500/30' },
+  { id: 'todo', title: 'A Fazer', color: 'bg-blue-50 border-blue-200', textColor: 'text-blue-700', badgeColor: 'bg-blue-100 text-blue-700' },
+  { id: 'doing', title: 'Em Progresso', color: 'bg-amber-50 border-amber-200', textColor: 'text-amber-700', badgeColor: 'bg-amber-100 text-amber-700' },
+  { id: 'done', title: 'Concluido', color: 'bg-green-50 border-green-200', textColor: 'text-green-700', badgeColor: 'bg-green-100 text-green-700' },
 ] as const;
 
 export function KanbanBoard({ projectId }: KanbanBoardProps) {
@@ -82,15 +82,15 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       {COLUMNS.map((column) => (
         <div
           key={column.id}
-          className="glass-panel p-4 rounded-xl"
+          className="bg-white border border-border rounded-2xl p-4 shadow-sm"
           onDragOver={handleDragOver}
           onDrop={() => handleDrop(column.id)}
         >
           {/* Column Header */}
-          <div className={`border rounded-lg p-3 mb-4 ${column.color}`}>
-            <h3 className="font-semibold text-white flex items-center justify-between">
+          <div className={`border rounded-xl p-3 mb-4 ${column.color}`}>
+            <h3 className={`font-semibold flex items-center justify-between ${column.textColor}`}>
               <span>{column.title}</span>
-              <span className="text-sm bg-white/10 px-2 py-1 rounded">
+              <span className={`text-sm px-2.5 py-1 rounded-full font-bold ${column.badgeColor}`}>
                 {getTasksByColumn(column.id).length}
               </span>
             </h3>
@@ -111,11 +111,11 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
                   }
                 }}
                 placeholder="Nova tarefa..."
-                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7BA8F9] focus:border-transparent transition"
+                className="flex-1 px-3 py-2.5 bg-secondary border border-border rounded-xl text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
               />
               <button
                 onClick={() => handleCreateTask(column.id)}
-                className="p-2 glass-button rounded-lg hover:bg-[#7BA8F9]/20 transition"
+                className="p-2.5 bg-primary hover:bg-primary/90 rounded-xl text-white transition"
                 title="Adicionar"
               >
                 <Plus className="w-5 h-5" />
@@ -130,23 +130,23 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
                 key={task.id}
                 draggable
                 onDragStart={() => handleDragStart(task)}
-                className="bg-white/5 border border-white/10 rounded-lg p-3 cursor-move hover:bg-white/10 transition group"
+                className="bg-secondary border border-border rounded-xl p-3 cursor-move hover:border-primary/30 hover:shadow-sm transition group"
               >
                 <div className="flex items-start gap-2">
-                  <GripVertical className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <GripVertical className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium break-words">
+                    <p className="text-foreground text-sm font-medium break-words">
                       {task.title}
                     </p>
                     {task.description && (
-                      <p className="text-gray-400 text-xs mt-1 break-words">
+                      <p className="text-muted-foreground text-xs mt-1 break-words">
                         {task.description}
                       </p>
                     )}
                   </div>
                   <button
                     onClick={() => handleDeleteTask(task.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/10 rounded transition text-gray-400 hover:text-red-400"
+                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-lg transition text-muted-foreground hover:text-red-600"
                     title="Eliminar"
                   >
                     <Trash2 className="w-4 h-4" />

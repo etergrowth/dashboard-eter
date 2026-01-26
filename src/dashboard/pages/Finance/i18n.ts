@@ -12,7 +12,7 @@ export const TEXTS_PT = {
 
   // Upload
   uploadTitle: 'Carregar Fatura / Recibo',
-  uploadSubtitle: 'Arraste e solte ou clique para procurar (PDF, PNG, JPG)',
+  uploadSubtitle: 'Arraste e solte ou clique para procurar (PNG, JPG)',
   uploadMaxSize: 'Máximo: 10MB',
   uploadProcessing: 'A processar ficheiro...',
   uploadDragActive: 'Solte o ficheiro aqui...',
@@ -61,7 +61,7 @@ export const TEXTS_PT = {
   toastSuccess: '✅ Transação guardada com sucesso!',
   toastError: '❌ Erro ao processar. Tente novamente.',
   toastFileTooBig: 'Ficheiro demasiado grande. Máximo: 10MB',
-  toastInvalidFile: 'Tipo de ficheiro não suportado. Use: JPEG, PNG ou PDF',
+  toastInvalidFile: 'Tipo de ficheiro não suportado. Use: JPEG ou PNG',
   toastTransactionSaved: 'Transação guardada com sucesso!',
   toastTransactionError: 'Erro ao guardar transação',
 

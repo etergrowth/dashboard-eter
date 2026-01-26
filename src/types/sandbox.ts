@@ -1,5 +1,5 @@
 // Enums
-export type LeadSource = 'linkedin' | 'website' | 'referral' | 'cold_call' | 'email' | 'door_to_door';
+export type LeadSource = 'linkedin' | 'website' | 'referral' | 'cold_call' | 'email' | 'door_to_door' | 'inbound';
 export type LeadStatus = 'prospecting' | 'engaged' | 'qualified' | 'crm_ready' | 'dead';
 
 export type ActivityType = 

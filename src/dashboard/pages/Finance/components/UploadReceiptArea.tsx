@@ -3,21 +3,22 @@ import { useDropzone } from 'react-dropzone';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useReceiptUpload } from '@/dashboard/hooks/useReceiptUpload';
 import { TEXTS_PT } from '../i18n';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 interface UploadReceiptAreaProps {
-  onFileUploaded: (reciboId: string) => void;
+  onFileUploaded: (reciboId: string, transacaoId?: string) => void;
 }
 
 export function UploadReceiptArea({ onFileUploaded }: UploadReceiptAreaProps) {
   const [preview, setPreview] = useState<string | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const { uploadFile, uploading, error } = useReceiptUpload();
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const { uploadAndProcess, uploading, processing, error } = useReceiptUpload();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
 
     const file = acceptedFiles[0];
+    setResult(null);
 
     // Preview da imagem (apenas para imagens)
     if (file.type.startsWith('image/')) {
@@ -29,37 +30,49 @@ export function UploadReceiptArea({ onFileUploaded }: UploadReceiptAreaProps) {
     }
 
     try {
-      setProcessing(true);
-      // Upload para Supabase Storage e criar registo em recibos_transacoes
-      // O trigger automaticamente chama a Edge Function para processar
-      const uploadResult = await uploadFile(file);
+      // Upload e processar com OCR numa única chamada
+      const response = await uploadAndProcess(file);
 
-      if (uploadResult.reciboId) {
-        // Notificar componente pai que o recibo foi carregado
-        // A transação será criada automaticamente pelo trigger
-        onFileUploaded(uploadResult.reciboId);
-        // Manter processing=true enquanto aguarda processamento automático
-        // O estado será limpo quando a transação aparecer via Realtime
-      } else {
-        setProcessing(false);
+      if (response) {
+        const { uploaded, ocr } = response;
+
+        if (ocr.success && ocr.transacao_id) {
+          setResult({
+            success: true,
+            message: `Recibo processado! Valor: ${ocr.extracted_data?.valor?.toFixed(2) || '0.00'}€ - ${ocr.extracted_data?.comerciante || 'Comerciante desconhecido'}`,
+          });
+          onFileUploaded(uploaded.reciboId!, ocr.transacao_id);
+        } else {
+          setResult({
+            success: false,
+            message: ocr.error || 'Erro ao processar recibo com OCR',
+          });
+          // Ainda notificar que o ficheiro foi carregado, mesmo sem OCR
+          if (uploaded.reciboId) {
+            onFileUploaded(uploaded.reciboId);
+          }
+        }
       }
     } catch (err: any) {
       console.error('Erro no upload:', err);
-      setProcessing(false);
-      // Erro já é tratado no hook
+      setResult({
+        success: false,
+        message: err.message || 'Erro ao processar ficheiro',
+      });
     }
-  }, [uploadFile, onFileUploaded]);
+  }, [uploadAndProcess, onFileUploaded]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
-      'application/pdf': ['.pdf'],
     },
     maxFiles: 1,
-    disabled: uploading,
+    disabled: uploading || processing,
   });
+
+  const isLoading = uploading || processing;
 
   return (
     <Card>
@@ -73,13 +86,13 @@ export function UploadReceiptArea({ onFileUploaded }: UploadReceiptAreaProps) {
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
             transition-colors duration-200
             ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300'}
-            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50'}
+            ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50'}
           `}
         >
           <input {...getInputProps()} />
 
           <div className="flex flex-col items-center gap-2">
-            {uploading || processing ? (
+            {isLoading ? (
               <>
                 <Loader2 className="h-12 w-12 text-primary animate-spin" />
                 <p className="text-sm text-gray-600 mt-2">
@@ -100,14 +113,30 @@ export function UploadReceiptArea({ onFileUploaded }: UploadReceiptAreaProps) {
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-destructive/10 text-destructive text-sm rounded-lg">
+          <div className="mt-4 p-3 bg-destructive/10 text-destructive text-sm rounded-lg flex items-center gap-2">
+            <XCircle className="h-4 w-4 flex-shrink-0" />
             {error}
           </div>
         )}
 
-        {preview && !uploading && (
+        {result && (
+          <div className={`mt-4 p-3 text-sm rounded-lg flex items-center gap-2 ${
+            result.success
+              ? 'bg-green-500/10 text-green-700'
+              : 'bg-destructive/10 text-destructive'
+          }`}>
+            {result.success ? (
+              <CheckCircle className="h-4 w-4 flex-shrink-0" />
+            ) : (
+              <XCircle className="h-4 w-4 flex-shrink-0" />
+            )}
+            {result.message}
+          </div>
+        )}
+
+        {preview && !isLoading && (
           <div className="mt-4 border rounded-lg p-4">
-            <p className="text-sm font-medium mb-2">Pré-visualização:</p>
+            <p className="text-sm font-medium mb-2">Pre-visualizacao:</p>
             <img
               src={preview}
               alt="Preview"

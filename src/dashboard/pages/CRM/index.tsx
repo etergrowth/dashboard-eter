@@ -81,14 +81,14 @@ function DraggableCard({ client, onNavigate, onDelete, isDragging = false }: Dra
         </p>
       </div>
 
-      <div className="flex gap-2 mb-4">
-        <span className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase border ${client.urgency === 'alta' ? 'bg-red-500/10 text-red-400 border-red-500/10' :
-          client.urgency === 'media' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/10' :
-            'bg-blue-500/10 text-blue-400 border-blue-500/10'
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase border ${client.urgency === 'alta' ? 'bg-red-100 text-red-700 border-red-200' :
+          client.urgency === 'media' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+            'bg-blue-100 text-blue-700 border-blue-200'
           }`}>
           {client.urgency || 'baixa'}
         </span>
-        <span className="px-2 py-0.5 bg-secondary text-muted-foreground text-[8px] font-bold rounded uppercase border border-border">
+        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[9px] font-bold rounded-full uppercase border border-gray-200">
           {client.source || 'manual'}
         </span>
       </div>
@@ -232,12 +232,23 @@ export function CRM() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'lead': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'proposal': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'negotiation': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'closed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'lost': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case 'lead': return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'proposal': return 'bg-purple-100 text-purple-700 border-purple-300';
+      case 'negotiation': return 'bg-amber-100 text-amber-700 border-amber-300';
+      case 'closed': return 'bg-green-100 text-green-700 border-green-300';
+      case 'lost': return 'bg-red-100 text-red-700 border-red-300';
+      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'lead': return 'Lead';
+      case 'proposal': return 'Proposta';
+      case 'negotiation': return 'Negociacao';
+      case 'closed': return 'Fechado';
+      case 'lost': return 'Perdido';
+      default: return status;
     }
   };
 
@@ -362,8 +373,8 @@ export function CRM() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border ${getStatusColor(client.status)}`}>
-                          {client.status}
+                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusColor(client.status)}`}>
+                          {getStatusLabel(client.status)}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-bold text-foreground text-sm">

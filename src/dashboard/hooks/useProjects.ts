@@ -2,6 +2,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import type { Project, ProjectInsert, ProjectUpdate, ProjectTask, ProjectTaskInsert, ProjectTaskUpdate } from '../../types';
 
+// Helper function to get current user ID
+async function getCurrentUserId(): Promise<string | null> {
+  // Tentar pegar da sessão primeiro (mais rápido)
+  const { data: sessionData } = await supabase.auth.getSession();
+  
+  if (sessionData.session?.user?.id) {
+    return sessionData.session.user.id;
+  }
+  
+  // Backup: pegar do usuário diretamente
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  return user?.id || null;
+}
+
 // Projects
 export function useProjects() {
   return useQuery({
@@ -18,17 +33,20 @@ export function useProjects() {
   });
 }
 
-// Local user ID for local-only execution
-const LOCAL_USER_ID = 'local-user';
-
 export function useCreateProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (project: ProjectInsert) => {
+      const userId = await getCurrentUserId();
+      
+      if (!userId) {
+        throw new Error('Utilizador não autenticado');
+      }
+
       const { data, error } = await supabase
         .from('projects')
-        .insert({ ...project, user_id: LOCAL_USER_ID } as any)
+        .insert({ ...project, user_id: userId })
         .select()
         .single();
 
@@ -109,9 +127,15 @@ export function useCreateProjectTask() {
 
   return useMutation({
     mutationFn: async (task: ProjectTaskInsert) => {
+      const userId = await getCurrentUserId();
+      
+      if (!userId) {
+        throw new Error('Utilizador não autenticado');
+      }
+
       const { data, error } = await supabase
         .from('project_tasks')
-        .insert({ ...task, user_id: LOCAL_USER_ID } as any)
+        .insert({ ...task, user_id: userId })
         .select()
         .single();
 

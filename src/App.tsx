@@ -18,7 +18,7 @@ import { Proposals } from './dashboard/pages/Proposals';
 import { FormTest } from './dashboard/pages/FormTest';
 import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
 import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
-import { LeadsQueue, LeadDetail, MetricsDashboard } from './dashboard/pages/Sandbox';
+import { LeadsQueue, LeadDetail, MetricsDashboard, LeadsPendentes } from './dashboard/pages/Sandbox';
 import { Finance } from './dashboard/pages/Finance';
 import { FinanceStatistics } from './dashboard/pages/Finance/Statistics';
 
@@ -51,6 +51,7 @@ function App() {
               <Route path="sandbox" element={<LeadsQueue />} />
               <Route path="sandbox/:id" element={<LeadDetail />} />
               <Route path="sandbox/metrics" element={<MetricsDashboard />} />
+              <Route path="sandbox/pendentes" element={<LeadsPendentes />} />
             </Route>
           </Route>
 

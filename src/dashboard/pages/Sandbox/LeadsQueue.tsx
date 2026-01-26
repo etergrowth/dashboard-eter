@@ -86,6 +86,7 @@ export function LeadsQueue() {
 
   const sources: { value: SourceFilter; label: string }[] = [
     { value: 'all', label: 'Todas as Origens' },
+    { value: 'inbound', label: 'Inbound (Website)' },
     { value: 'linkedin', label: 'LinkedIn' },
     { value: 'website', label: 'Website' },
     { value: 'referral', label: 'Indicação' },

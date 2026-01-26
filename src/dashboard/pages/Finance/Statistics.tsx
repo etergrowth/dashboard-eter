@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useFinanceStatistics } from '@/dashboard/hooks/useFinanceStatistics';
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 import { useCategorias } from '@/dashboard/hooks/useCategorias';
 import { PageHeader, LoadingState } from '@/dashboard/components/sections';
 
@@ -18,11 +18,23 @@ const CHART_COLORS = [
 
 export function FinanceStatistics() {
   // #region agent log
-  fetch('http://127.0.0.1:7249/ingest/97ef3031-d893-442a-9483-5eceb6f4d3ce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:25',message:'FinanceStatistics component render',timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:19',message:'Component render start',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
   // #endregion
   const navigate = useNavigate();
-  const { data: statistics, isLoading } = useFinanceStatistics();
-  const { data: categorias } = useCategorias();
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:24',message:'Calling useFinanceStatistics hook',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  const { data: statistics, isLoading, error: statsError } = useFinanceStatistics();
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:26',message:'useFinanceStatistics result',data:{isLoading,hasData:!!statistics,hasError:!!statsError,errorMessage:statsError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:27',message:'Calling useCategorias hook',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  const { data: categorias, error: categoriasError } = useCategorias();
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:29',message:'useCategorias result',data:{hasData:!!categorias,hasError:!!categoriasError,errorMessage:categoriasError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-PT', {
@@ -40,7 +52,13 @@ export function FinanceStatistics() {
     return categoria?.nome_display || nome;
   };
 
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:43',message:'Checking loading state',data:{isLoading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   if (isLoading) {
+    // #region agent log
+    fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:44',message:'Rendering loading state',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -62,7 +80,13 @@ export function FinanceStatistics() {
     );
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:65',message:'Checking statistics data',data:{hasStatistics:!!statistics,hasError:!!statsError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   if (!statistics) {
+    // #region agent log
+    fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:66',message:'Rendering no data state',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -88,6 +112,9 @@ export function FinanceStatistics() {
     );
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7251/ingest/d78a0169-ce2b-4fe8-a85e-f7266db11323',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Statistics.tsx:91',message:'Rendering main content',data:{hasStatistics:!!statistics,statisticsKeys:statistics?Object.keys(statistics):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -501,12 +528,8 @@ export function FinanceStatistics() {
                 ...g,
                 categoria: getCategoriaDisplayName(g.categoria),
               }))}
+              style={{ background: 'transparent' }}
             >
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="hsl(var(--border))" 
-                opacity={0.3} 
-              />
               <XAxis
                 dataKey="categoria"
                 tickLine={false}
