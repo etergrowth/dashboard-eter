@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redefinir Password - Eter Growth</title>
+    <title>Apresentação Eter Growth</title>
     <style>
         * {
             margin: 0;
@@ -60,38 +60,23 @@
             font-weight: 400;
         }
 
-        .cta-container {
+        .screenshot-container {
             margin: 32px 0;
-            text-align: left;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e5e5e5;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .screenshot-container:hover {
+            border-color: #0066cc;
+            opacity: 0.95;
         }
 
-        .cta-button {
-            display: inline-block;
-            background-color: #1a1a1a;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            transition: background-color 0.2s;
-        }
-
-        .cta-button:hover {
-            background-color: #333333;
-        }
-
-        .secondary-text {
-            font-size: 13px;
-            color: #737373;
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .secondary-text a {
-            color: #1a1a1a;
-            word-break: break-all;
+        .screenshot-container img {
+            width: 100%;
+            display: block;
         }
 
         .footer {
@@ -111,7 +96,6 @@
             .header { padding: 30px 24px 16px 24px; }
             .content { padding: 0 24px 30px 24px; }
             .footer { padding: 30px 24px; }
-            .cta-button { display: block; text-align: center; }
         }
     </style>
 </head>
@@ -127,25 +111,27 @@
             <p class="greeting">Olá,</p>
 
             <p class="main-text">
-                Recebemos o pedido para recuperar o acesso à tua conta no Dashboard Eter Growth.
+                O contacto através deste email surge na sequência da nossa tentativa de entrar em contacto com o gestor da empresa, onde nos foi pedido o envio de informação por escrito.
             </p>
 
             <p class="main-text">
-                Para definir uma nova password, basta clicar no botão abaixo. <strong>Este link é válido por apenas 1 hora</strong> por motivos de segurança.
+                Contudo, em vez de enviarmos um email extenso e aborrecido que muito provalvelmente ninguém vai ler, <strong>achámos melhor optar por esta abordagem diferente.</strong>
             </p>
             
-            <div class="cta-container">
-                <a href="{{ .ConfirmationURL }}" class="cta-button">Redefinir Password</a>
-            </div>
-
             <p class="main-text">
-                Se não foste tu a solicitar esta alteração, podes ignorar este email com tranquilidade. A tua conta permanece segura e a password atual não foi alterada.
+                Ao carregar no vídeo abaixo, o link irá redirecionar para a página onde se encontra a nossa apresentação. Desta forma, será possível saber um pouco mais sobre nós: qual é o nosso propósito e o motivo do contacto.
             </p>
 
-            <div class="secondary-text">
-                <p>O botão não funciona? Copia e cola o seguinte link no teu browser:<br>
-                <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a></p>
-            </div>
+            <a href="#" target="_blank" style="text-decoration: none; display: block;">
+                <div class="screenshot-container">
+                    <img src="https://ozjafmkfabewxoyibirq.supabase.co/storage/v1/object/public/etergrowthweb/YouTube_Thumbnail_apresentacao.png" alt="Ver Apresentação em Vídeo">
+                </div>
+            </a>
+
+            <p class="main-text">
+                Obrigado pela atenção,<br>
+                A equipa Eter Growth
+            </p>
         </div>
 
         <div class="footer">
