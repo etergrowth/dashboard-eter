@@ -47,6 +47,7 @@ export function useProposals() {
 
       return proposalsWithClients as (Proposal & { client: { name: string; company: string | null } | null })[];
     },
+    staleTime: 10 * 60 * 1000, // 10 minutos - propostas mudam raramente
   });
 }
 
@@ -74,6 +75,7 @@ export function useProposal(proposalId: string) {
 
       return { ...(proposal as any), client } as Proposal & { client: { name: string; company: string | null } | null };
     },
+    staleTime: 10 * 60 * 1000, // 10 minutos - proposta individual
   });
 }
 

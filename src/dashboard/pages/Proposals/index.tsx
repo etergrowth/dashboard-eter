@@ -454,4 +454,5 @@ function ProposalItemsView({ proposal, onClose, onAddItem, onEditItem }: Proposa
       </div>
     </div>
   );
-}
+}// Default export para lazy loading
+export default Proposals;

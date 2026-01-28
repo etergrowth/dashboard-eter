@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Target, LayoutDashboard, Wallet, Image } from 'lucide-react';
+import { Users, Target, LayoutDashboard, Wallet, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface NavItem {
@@ -15,7 +15,7 @@ const navItems: NavItem[] = [
   { id: 'sandbox', name: 'Sandbox', to: '/dashboard/sandbox', icon: Target },
   { id: 'overview', name: 'Overview', to: '/dashboard', icon: LayoutDashboard },
   { id: 'finance', name: 'Finanças', to: '/dashboard/finance', icon: Wallet },
-  { id: 'cms', name: 'CMS', to: '/dashboard/cms', icon: Image },
+  { id: 'kms-stats', name: 'Kms', to: '/dashboard/mapa-kms/estatisticas', icon: BarChart3 },
 ];
 
 export function BottomNavigation() {

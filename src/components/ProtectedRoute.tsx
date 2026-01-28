@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Componente que protege rotas, exigindo autenticação e email autorizado
@@ -8,20 +9,54 @@ import { useAuth } from '@/hooks/useAuth';
 export const ProtectedRoute = () => {
   const { isAuthenticated, isLoading, session } = useAuth();
   const [showTimeout, setShowTimeout] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Verificar sessão do localStorage diretamente no mount (após refresh)
+  useEffect(() => {
+    let mounted = true;
+    
+    // Dar um pequeno delay para permitir que o useAuth recupere a sessão
+    const checkSession = async () => {
+      try {
+        // Pequeno delay para permitir que o useAuth processe
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        if (mounted) {
+          // Se ainda não temos sessão após delay, aguardar mais um pouco
+          // O useAuth já tenta localStorage primeiro, então isto é apenas backup
+          if (!session) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        }
+      } catch (error) {
+        console.error('[ProtectedRoute] Error checking session:', error);
+      } finally {
+        if (mounted) {
+          setIsCheckingSession(false);
+        }
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, [session]);
 
   // Mostrar mensagem de timeout após 5 segundos de loading
   useEffect(() => {
-    if (isLoading && !session) {
+    if ((isLoading || isCheckingSession) && !session) {
       const timer = setTimeout(() => {
         setShowTimeout(true);
       }, 5000);
       return () => clearTimeout(timer);
     }
     setShowTimeout(false);
-  }, [isLoading, session]);
+  }, [isLoading, isCheckingSession, session]);
 
-  // Durante loading inicial, mostrar indicador visual em vez de tela branca
-  if (isLoading && !session) {
+  // Durante loading inicial ou verificação de sessão, mostrar indicador visual
+  if ((isLoading || isCheckingSession) && !session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -43,8 +78,8 @@ export const ProtectedRoute = () => {
     );
   }
 
-  // Após loading, se não há sessão, redirecionar para login
-  if (!isLoading && !session) {
+  // Após loading e verificação, se não há sessão, redirecionar para login
+  if (!isLoading && !isCheckingSession && !session) {
     const currentPath = window.location.pathname;
     if (currentPath !== '/login' && currentPath.startsWith('/dashboard')) {
       sessionStorage.setItem('returnTo', currentPath);

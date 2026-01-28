@@ -458,3 +458,5 @@ export function CRM() {
     </motion.div>
   );
 }
+// Default export para lazy loading
+export default CRM;

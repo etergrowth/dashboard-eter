@@ -296,3 +296,5 @@ export function Projects() {
     </div>
   );
 }
+// Default export para lazy loading
+export default Projects;

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import { getRedirectUrl } from '@/lib/url-helper';
+import { logger, metrics } from '@/lib/monitoring';
 
 /**
  * Verifica se um email está autorizado a aceder ao dashboard
@@ -72,8 +73,8 @@ const loadAllowedEmails = async () => {
   }
 };
 
-// Carregar cache ao inicializar
-loadAllowedEmails();
+// Cache será carregado sob demanda quando necessário
+// loadAllowedEmails(); - Removido para evitar fetch no carregamento do módulo
 
 /**
  * Hook de autenticação com validação de email
@@ -84,41 +85,116 @@ export const useAuth = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [isEmailAllowed, setIsEmailAllowed] = useState<boolean | null>(null);
 
-  // Query para obter sessão atual com timeout
+  // Query otimizada para obter sessão com fallback para localStorage
   const { data: session, isLoading, error: sessionError } = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: async () => {
-      // Criar uma promise com timeout de 10 segundos
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
-      );
-      
-      const sessionPromise = supabase.auth.getSession();
-      
+      // Iniciar tracking de performance
+      metrics.start('auth_session_fetch', { timeout: 10000 });
+      logger.auth('session_fetch_start', { timeout: 10000 });
+
+      // Estratégia: tentar localStorage primeiro (mais rápido), depois getSession()
       try {
+        // 1. Tentar ler do localStorage diretamente (fallback rápido)
+        // O Supabase armazena a sessão em uma chave específica
+        let storedSession = null;
+        
+        // Procurar pela chave do Supabase no localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('sb-') && key.includes('auth-token')) {
+            try {
+              const stored = localStorage.getItem(key);
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                if (parsed?.currentSession && parsed.currentSession.expires_at) {
+                  const expiresAt = parsed.currentSession.expires_at * 1000;
+                  const now = Date.now();
+                  
+                  // Se sessão ainda válida (com margem de 5 min), usar diretamente
+                  if (expiresAt > now + 5 * 60 * 1000) {
+                    storedSession = parsed.currentSession;
+                    logger.auth('session_from_storage', { email: storedSession.user?.email });
+                    const duration = metrics.end('auth_session_fetch', { success: true, source: 'localStorage' });
+                    return storedSession;
+                  }
+                }
+              }
+            } catch {
+              // Continuar procurando
+            }
+          }
+        }
+
+        // 2. Se não encontrou no localStorage ou expirou, usar getSession() com timeout maior
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => {
+            logger.warn('session_fetch_timeout', { duration: 10000 });
+            reject(new Error('Session fetch timeout'));
+          }, 10000) // Aumentado para 10s
+        );
+        
+        const sessionPromise = supabase.auth.getSession();
+        
         const { data: { session }, error } = await Promise.race([
           sessionPromise,
           timeoutPromise
         ]);
         
+        // Finalizar tracking
+        const duration = metrics.end('auth_session_fetch', { success: !error, source: 'getSession' });
+        
         if (error) {
-          console.error('[useAuth] Session error:', error);
+          logger.error('session_fetch_error', error.message, { duration });
           return null;
         }
         
+        logger.auth('session_fetch_success', { 
+          duration, 
+          hasSession: !!session,
+          email: session?.user?.email 
+        });
+        
         return session;
       } catch (err) {
-        console.error('[useAuth] Session fetch failed:', err);
+        const duration = metrics.end('auth_session_fetch', { success: false });
+        logger.error('session_fetch_failed', err instanceof Error ? err.message : 'Unknown error', { duration });
+        
+        // Último fallback: tentar localStorage novamente mesmo após erro
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('sb-') && key.includes('auth-token')) {
+              try {
+                const stored = localStorage.getItem(key);
+                if (stored) {
+                  const parsed = JSON.parse(stored);
+                  if (parsed?.currentSession) {
+                    logger.auth('session_fallback_storage', { email: parsed.currentSession.user?.email });
+                    return parsed.currentSession;
+                  }
+                }
+              } catch {
+                // Continuar procurando
+              }
+            }
+          }
+        } catch {
+          // Ignorar erros do fallback
+        }
+        
         return null;
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 2, // Tentar 2 vezes em caso de falha
-    retryDelay: 1000, // 1 segundo entre tentativas
-    gcTime: 0, // Não manter em cache queries falhadas
+    retry: 1,
+    retryDelay: 500,
+    gcTime: 10 * 60 * 1000, // 10 minutos - manter sessão em cache
+    refetchOnMount: false, // Não refetch ao montar se já temos dados em cache
+    refetchOnWindowFocus: false, // Não refetch ao focar janela
   });
 
-  // Query para obter utilizador atual
+  // Query para obter utilizador atual (executa apenas se houver sessão)
   const { data: user } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: async () => {
@@ -129,33 +205,36 @@ export const useAuth = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Validar email quando sessão muda (usa verificação async na DB)
+  // Validar email quando sessão muda (otimizado sem retry desnecessário)
   useEffect(() => {
     const validateEmail = async () => {
       if (session?.user?.email) {
         const email = session.user.email;
         setIsValidating(true);
 
+        // Tracking de validação de email
+        metrics.start('auth_email_validation', { email });
+        logger.auth('email_validation_start', { email });
+
+        // Verificação única - se RLS falhar, será tratado no próximo mount/refresh
         const allowed = await checkEmailAllowed(email);
+        const duration = metrics.end('auth_email_validation', { allowed });
+        
         setIsEmailAllowed(allowed);
 
         if (!allowed) {
-          // Tentar novamente após 1 segundo (timing/RLS pode falhar inicialmente)
-          console.warn('[useAuth] Email validation failed, retrying...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const retryAllowed = await checkEmailAllowed(email);
-          setIsEmailAllowed(retryAllowed);
-
-          if (!retryAllowed) {
-            // Email não autorizado - navegar para /unauthorized SEM fazer logout
-            // Manter sessão ativa evita loops de re-autenticação
-            console.warn('[useAuth] Email not authorized, redirecting to /unauthorized');
-            navigate('/unauthorized');
-          }
+          // Email não autorizado - navegar para /unauthorized SEM fazer logout
+          // Manter sessão ativa evita loops de re-autenticação
+          logger.warn('email_not_authorized', { email, duration });
+          navigate('/unauthorized');
+        } else {
+          logger.auth('email_validation_success', { email, duration });
         }
+        
         setIsValidating(false);
       } else {
         setIsEmailAllowed(null);
+        setIsValidating(false);
       }
     };
 
@@ -167,6 +246,8 @@ export const useAuth = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      logger.auth('auth_state_change', { event, hasSession: !!session });
+      
       if (event === 'SIGNED_IN' && session?.user?.email) {
         // Atualizar cache e invalidar queries
         // A validação de email é feita pelo useEffect acima
@@ -176,7 +257,14 @@ export const useAuth = () => {
         queryClient.clear();
         setIsEmailAllowed(null);
       } else if (event === 'TOKEN_REFRESHED' && session) {
+        // Token foi atualizado - apenas atualizar queries, não limpar
         queryClient.invalidateQueries({ queryKey: ['auth'] });
+      } else if (event === 'INITIAL_SESSION' && session) {
+        // Sessão recuperada do localStorage após refresh
+        // Não invalidar queries para evitar refetch desnecessário
+        // Apenas atualizar o cache se necessário
+        logger.auth('initial_session_recovered', { email: session.user?.email });
+        // Não fazer nada - a query já vai buscar a sessão
       }
     });
 

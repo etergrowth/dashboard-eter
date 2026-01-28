@@ -30,6 +30,7 @@ export function useProjects() {
       if (error) throw error;
       return data as Project[];
     },
+    staleTime: 10 * 60 * 1000, // 10 minutos - dados de projetos mudam raramente
   });
 }
 
@@ -119,6 +120,7 @@ export function useProjectTasks(projectId?: string) {
       if (error) throw error;
       return data as ProjectTask[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutos - tasks podem ser atualizadas mais frequentemente
   });
 }
 

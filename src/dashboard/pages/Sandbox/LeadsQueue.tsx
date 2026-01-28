@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Target, Clock, LayoutGrid, List, Edit } from 'lucide-react';
+import { Plus, Search, Target, Clock, LayoutGrid, List, Edit, Inbox } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PageHeader, ActionButton, EmptyState, LoadingState } from '../../components/sections';
 import { useSandboxLeads, useUpdateSandboxLead } from '../../hooks/useSandboxLeads';
@@ -146,6 +146,12 @@ export function LeadsQueue() {
                 <List size={18} />
               </button>
             </div>
+            <ActionButton
+              label={isMobile ? "Leads" : "Leads Website"}
+              onClick={() => navigate('/dashboard/sandbox/pendentes')}
+              icon={Inbox}
+              variant="secondary"
+            />
             <ActionButton
               label="Nova Lead"
               onClick={() => setShowForm(true)}
@@ -386,3 +392,6 @@ export function LeadsQueue() {
     </motion.div>
   );
 }
+
+// Default export para lazy loading
+export default LeadsQueue;

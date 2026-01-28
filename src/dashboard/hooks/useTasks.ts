@@ -14,6 +14,7 @@ export function useTasks() {
       if (error) throw error;
       return data as Task[];
     },
+    staleTime: 3 * 60 * 1000, // 3 minutos - tasks são atualizadas frequentemente
   });
 }
 
@@ -33,6 +34,7 @@ export function useClientTasks(clientId?: string) {
       return data as Task[];
     },
     enabled: !!clientId,
+    staleTime: 3 * 60 * 1000, // 3 minutos - tasks são atualizadas frequentemente
   });
 }
 

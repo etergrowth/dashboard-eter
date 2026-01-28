@@ -566,3 +566,6 @@ export function FinanceStatistics() {
     </motion.div>
   );
 }
+
+// Default export para lazy loading
+export default FinanceStatistics;

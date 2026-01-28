@@ -110,7 +110,10 @@ export function ProposalsChart() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-PT', { month: 'short', day: 'numeric' });
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    // Formato: DD/MM (mais compacto)
+    return `${day}/${month.toString().padStart(2, '0')}`;
   };
 
   const formatTooltipDate = (dateStr: string) => {
@@ -210,49 +213,72 @@ export function ProposalsChart() {
 
       {/* Chart */}
       <div className="p-4 md:p-6">
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart
             data={chartData}
-            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+            margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
             style={{ background: 'transparent' }}
           >
+            <defs>
+              <linearGradient id={`gradient-${activeMetric}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={getChartColor(activeMetric)} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={getChartColor(activeMetric)} stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
+              tickMargin={12}
               tickFormatter={formatDate}
               stroke="hsl(var(--muted-foreground))"
-              style={{ fontSize: '10px' }}
+              style={{ 
+                fontSize: '11px',
+                fontWeight: 500,
+              }}
               angle={-45}
               textAnchor="end"
-              height={60}
+              height={70}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
+                backgroundColor: 'hsl(var(--popover))',
                 border: `1px solid hsl(var(--border))`,
                 borderRadius: '8px',
-                color: 'hsl(var(--card-foreground))',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                padding: '8px 12px',
+              }}
+              labelStyle={{
+                color: 'hsl(var(--popover-foreground))',
+                fontWeight: 600,
+                marginBottom: '4px',
+              }}
+              itemStyle={{
+                color: 'hsl(var(--popover-foreground))',
+                fontSize: '13px',
               }}
               labelFormatter={formatTooltipDate}
               formatter={(value: number) => [
                 value, 
                 activeMetric === 'total' ? 'Total' : activeMetric === 'accepted' ? 'Aceites' : 'Rejeitadas'
               ]}
+              cursor={{ stroke: getChartColor(activeMetric), strokeWidth: 1, strokeDasharray: '3 3' }}
             />
             <Line
               type="monotone"
               dataKey={activeMetric}
               stroke={getChartColor(activeMetric)}
-              strokeWidth={2}
+              strokeWidth={3}
               dot={false}
               activeDot={{ 
-                r: 6, 
+                r: 7, 
                 fill: getChartColor(activeMetric),
                 stroke: 'hsl(var(--card))',
-                strokeWidth: 2,
+                strokeWidth: 3,
+                style: { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }
               }}
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </LineChart>
         </ResponsiveContainer>

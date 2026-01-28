@@ -501,3 +501,6 @@ export function ProposalDetails() {
     </motion.div>
   );
 }
+
+// Default export para lazy loading
+export default ProposalDetails;

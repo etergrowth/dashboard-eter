@@ -1,32 +1,48 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/queryClient';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { queryClient, persistOptions } from './lib/queryClient';
 
-// Auth Components
+// Auth Components (carregados imediatamente - são pequenos e críticos)
 import { Login } from './pages/Login';
 import { ResetPassword } from './pages/ResetPassword';
 import { Unauthorized } from './pages/Unauthorized';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
-// Dashboard Components
+// Dashboard Layout (carregado imediatamente - necessário para todas as rotas protegidas)
 import { DashboardLayout } from './dashboard/layouts/DashboardLayout';
-import { Overview } from './dashboard/pages/Overview';
-import { CRM } from './dashboard/pages/CRM';
-import { Projects } from './dashboard/pages/Projects';
-import { CMS } from './dashboard/pages/CMS';
-import { Proposals } from './dashboard/pages/Proposals';
-import { FormTest } from './dashboard/pages/FormTest';
-import { LeadDetails } from './dashboard/pages/CRM/LeadDetails';
-import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
-import { LeadsQueue, LeadDetail, MetricsDashboard, LeadsPendentes } from './dashboard/pages/Sandbox';
-import { Finance } from './dashboard/pages/Finance';
-import { FinanceStatistics } from './dashboard/pages/Finance/Statistics';
-import { MapaKms } from './dashboard/pages/MapaKms';
-import { NewTrip } from './dashboard/pages/MapaKms/NewTrip';
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
+
+// Dashboard Pages (lazy loaded - apenas carregados quando necessário)
+const Overview = lazy(() => import('./dashboard/pages/Overview'));
+const CRM = lazy(() => import('./dashboard/pages/CRM'));
+const LeadDetails = lazy(() => import('./dashboard/pages/CRM/LeadDetails'));
+const Projects = lazy(() => import('./dashboard/pages/Projects'));
+const CMS = lazy(() => import('./dashboard/pages/CMS'));
+const Proposals = lazy(() => import('./dashboard/pages/Proposals'));
+const ProposalDetails = lazy(() => import('./dashboard/pages/Proposals/ProposalDetails'));
+const FormTest = lazy(() => import('./dashboard/pages/FormTest'));
+const Finance = lazy(() => import('./dashboard/pages/Finance'));
+const FinanceStatistics = lazy(() => import('./dashboard/pages/Finance/Statistics'));
+const MapaKms = lazy(() => import('./dashboard/pages/MapaKms'));
+const MapaKmsStatistics = lazy(() => import('./dashboard/pages/MapaKms/Statistics'));
+const NewTrip = lazy(() => import('./dashboard/pages/MapaKms/NewTrip'));
+
+// Sandbox pages
+const LeadsQueue = lazy(() => import('./dashboard/pages/Sandbox').then(m => ({ default: m.LeadsQueue })));
+const LeadDetail = lazy(() => import('./dashboard/pages/Sandbox').then(m => ({ default: m.LeadDetail })));
+const MetricsDashboard = lazy(() => import('./dashboard/pages/Sandbox').then(m => ({ default: m.MetricsDashboard })));
+const LeadsPendentes = lazy(() => import('./dashboard/pages/Sandbox').then(m => ({ default: m.LeadsPendentes })));
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
@@ -38,24 +54,25 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
-            {/* Dashboard Routes */}
+            {/* Dashboard Routes - Todas as páginas wrapped com Suspense */}
             <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Overview />} />
-              <Route path="crm" element={<CRM />} />
-              <Route path="crm/:id" element={<LeadDetails />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="proposals" element={<Proposals />} />
-              <Route path="proposals/:id" element={<ProposalDetails />} />
-              <Route path="cms" element={<CMS />} />
-              <Route path="formulario" element={<FormTest />} />
-              <Route path="finance" element={<Finance />} />
-              <Route path="finance/estatisticas" element={<FinanceStatistics />} />
-              <Route path="sandbox" element={<LeadsQueue />} />
-              <Route path="sandbox/:id" element={<LeadDetail />} />
-              <Route path="sandbox/metrics" element={<MetricsDashboard />} />
-              <Route path="sandbox/pendentes" element={<LeadsPendentes />} />
-              <Route path="mapa-kms" element={<MapaKms />} />
-              <Route path="mapa-kms/nova" element={<NewTrip />} />
+              <Route index element={<Suspense fallback={<PageLoader />}><Overview /></Suspense>} />
+              <Route path="crm" element={<Suspense fallback={<PageLoader />}><CRM /></Suspense>} />
+              <Route path="crm/:id" element={<Suspense fallback={<PageLoader />}><LeadDetails /></Suspense>} />
+              <Route path="projects" element={<Suspense fallback={<PageLoader />}><Projects /></Suspense>} />
+              <Route path="proposals" element={<Suspense fallback={<PageLoader />}><Proposals /></Suspense>} />
+              <Route path="proposals/:id" element={<Suspense fallback={<PageLoader />}><ProposalDetails /></Suspense>} />
+              <Route path="cms" element={<Suspense fallback={<PageLoader />}><CMS /></Suspense>} />
+              <Route path="formulario" element={<Suspense fallback={<PageLoader />}><FormTest /></Suspense>} />
+              <Route path="finance" element={<Suspense fallback={<PageLoader />}><Finance /></Suspense>} />
+              <Route path="finance/estatisticas" element={<Suspense fallback={<PageLoader />}><FinanceStatistics /></Suspense>} />
+              <Route path="sandbox" element={<Suspense fallback={<PageLoader />}><LeadsQueue /></Suspense>} />
+              <Route path="sandbox/:id" element={<Suspense fallback={<PageLoader />}><LeadDetail /></Suspense>} />
+              <Route path="sandbox/metrics" element={<Suspense fallback={<PageLoader />}><MetricsDashboard /></Suspense>} />
+              <Route path="sandbox/pendentes" element={<Suspense fallback={<PageLoader />}><LeadsPendentes /></Suspense>} />
+              <Route path="mapa-kms" element={<Suspense fallback={<PageLoader />}><MapaKms /></Suspense>} />
+              <Route path="mapa-kms/estatisticas" element={<Suspense fallback={<PageLoader />}><MapaKmsStatistics /></Suspense>} />
+              <Route path="mapa-kms/nova" element={<Suspense fallback={<PageLoader />}><NewTrip /></Suspense>} />
             </Route>
           </Route>
 
@@ -63,7 +80,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
 

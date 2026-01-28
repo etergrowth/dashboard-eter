@@ -234,3 +234,6 @@ export function MetricsDashboard() {
     </motion.div>
   );
 }
+
+// Default export para lazy loading
+export default MetricsDashboard;

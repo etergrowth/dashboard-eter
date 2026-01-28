@@ -536,3 +536,6 @@ export function LeadDetails() {
         </motion.div>
     );
 }
+
+// Default export para lazy loading
+export default LeadDetails;

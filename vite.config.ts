@@ -14,7 +14,26 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        // Code splitting otimizado para melhor caching
+        manualChunks: {
+          // Bibliotecas React - raramente mudam
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          
+          // Supabase - API client
+          'supabase': ['@supabase/supabase-js'],
+          
+          // React Query - gestão de estado
+          'query': ['@tanstack/react-query'],
+          
+          // Bibliotecas UI pesadas
+          'ui': ['framer-motion', '@dnd-kit/core', '@dnd-kit/sortable'],
+          
+          // Bibliotecas de gráficos
+          'charts': ['recharts'],
+          
+          // Ícones - carregados em múltiplas páginas
+          'icons': ['lucide-react'],
+        },
       },
     },
   },

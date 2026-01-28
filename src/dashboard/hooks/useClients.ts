@@ -17,6 +17,7 @@ export function useClients() {
       if (error) throw error;
       return data as Client[];
     },
+    staleTime: 10 * 60 * 1000, // 10 minutos - dados de clientes mudam raramente
   });
 }
 

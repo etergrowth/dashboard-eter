@@ -72,3 +72,6 @@ export function Overview() {
     </motion.div>
   );
 }
+
+// Default export para lazy loading
+export default Overview;

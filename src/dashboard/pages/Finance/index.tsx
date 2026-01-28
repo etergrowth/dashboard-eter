@@ -257,3 +257,5 @@ export function Finance() {
     </div>
   );
 }
+// Default export para lazy loading
+export default Finance;

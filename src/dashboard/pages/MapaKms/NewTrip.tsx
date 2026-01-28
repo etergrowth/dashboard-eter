@@ -104,29 +104,67 @@ export function NewTrip() {
     }
   };
 
+  // Função para sanitizar texto removendo HTML
+  const sanitizeText = (text: string): string => {
+    // Remove tags HTML
+    let sanitized = text.replace(/<[^>]*>/g, '');
+    // Decodifica entidades HTML comuns
+    sanitized = sanitized
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    // Remove espaços extras
+    return sanitized.trim();
+  };
+
   const handleSubmit = async (status: 'draft' | 'completed') => {
     if (!canProceed()) {
       toast.error('Por favor preencha os campos obrigatórios');
       return;
     }
 
+    // Validação e sanitização adicional
+    const trimmedReason = formData.reason.trim();
+    if (!trimmedReason || trimmedReason.length < 3) {
+      toast.error('O motivo da viagem deve ter pelo menos 3 caracteres');
+      return;
+    }
+
+    // Sanitizar o campo reason para remover HTML
+    const sanitizedReason = sanitizeText(trimmedReason);
+    if (!sanitizedReason || sanitizedReason.length < 3) {
+      toast.error('O motivo da viagem contém caracteres inválidos');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Calcular distância se houver start_km e end_km
+      const distance = 
+        formData.start_km !== null && 
+        formData.end_km !== null && 
+        formData.end_km > formData.start_km
+          ? formData.end_km - formData.start_km
+          : null;
+
       // 1. Create trip first
       const tripData: TripInsert = {
         date: new Date(formData.date).toISOString(),
-        reason: formData.reason,
+        reason: sanitizedReason,
         start_km: formData.start_km,
         end_km: formData.end_km,
-        start_location: formData.start_location || null,
-        end_location: formData.end_location || null,
+        start_location: formData.start_location?.trim() || null,
+        end_location: formData.end_location?.trim() || null,
         start_lat: formData.start_lat,
         start_lng: formData.start_lng,
         end_lat: formData.end_lat,
         end_lng: formData.end_lng,
         status,
-        user_id: '00000000-0000-0000-0000-000000000000', // Will be overridden by hook
+        // user_id será adicionado automaticamente pelo hook useCreateTrip
       };
 
       const trip = await createTrip.mutateAsync(tripData);
@@ -136,29 +174,49 @@ export function NewTrip() {
       let endPhotoUrl: string | null = null;
 
       if (formData.start_photo_file) {
-        const result = await uploadPhoto.mutateAsync({
-          file: formData.start_photo_file,
-          tripId: trip.id,
-          type: 'start',
-        });
-        startPhotoUrl = result.publicUrl;
+        try {
+          const result = await uploadPhoto.mutateAsync({
+            file: formData.start_photo_file,
+            tripId: trip.id,
+            type: 'start',
+          });
+          startPhotoUrl = result.publicUrl;
+        } catch (photoError) {
+          console.error('Error uploading start photo:', photoError);
+          // Continuar mesmo se upload de foto falhar
+        }
       }
 
       if (formData.end_photo_file) {
-        const result = await uploadPhoto.mutateAsync({
-          file: formData.end_photo_file,
-          tripId: trip.id,
-          type: 'end',
-        });
-        endPhotoUrl = result.publicUrl;
+        try {
+          const result = await uploadPhoto.mutateAsync({
+            file: formData.end_photo_file,
+            tripId: trip.id,
+            type: 'end',
+          });
+          endPhotoUrl = result.publicUrl;
+        } catch (photoError) {
+          console.error('Error uploading end photo:', photoError);
+          // Continuar mesmo se upload de foto falhar
+        }
       }
 
-      // 3. Update trip with photo URLs if uploaded
-      if (startPhotoUrl || endPhotoUrl) {
+      // 3. Update trip with distance and photo URLs in a single update
+      const updateData: any = {};
+      if (distance !== null) {
+        updateData.distance = distance;
+      }
+      if (startPhotoUrl) {
+        updateData.start_photo_url = startPhotoUrl;
+      }
+      if (endPhotoUrl) {
+        updateData.end_photo_url = endPhotoUrl;
+      }
+
+      if (Object.keys(updateData).length > 0) {
         await updateTrip.mutateAsync({
           id: trip.id,
-          start_photo_url: startPhotoUrl,
-          end_photo_url: endPhotoUrl,
+          ...updateData,
         });
       }
 
@@ -168,9 +226,30 @@ export function NewTrip() {
           : 'Rascunho guardado'
       );
       navigate('/dashboard/mapa-kms');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating trip:', error);
-      toast.error('Erro ao guardar viagem');
+      
+      // Mostrar mensagem de erro mais específica
+      let errorMessage = 'Erro ao guardar viagem';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.error?.message) {
+        errorMessage = error.error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // Mensagens mais amigáveis para erros comuns
+      if (errorMessage.includes('violates') || errorMessage.includes('constraint')) {
+        errorMessage = 'Erro: Dados inválidos. Verifique os campos preenchidos.';
+      } else if (errorMessage.includes('permission') || errorMessage.includes('policy')) {
+        errorMessage = 'Erro: Sem permissão para criar viagem. Contacte o administrador.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        errorMessage = 'Erro de conexão. Verifique a sua internet e tente novamente.';
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -445,3 +524,6 @@ export function NewTrip() {
     </div>
   );
 }
+
+// Default export para lazy loading
+export default NewTrip;

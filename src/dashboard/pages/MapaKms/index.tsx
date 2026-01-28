@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Search,
   Trash2,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -127,11 +128,20 @@ export function MapaKms() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => navigate('/dashboard/mapa-kms/estatisticas')}
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Estatísticas</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleExportCSV}
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="hidden sm:inline">Exportar</span>
           </Button>
           <Button
             size="sm"
@@ -139,7 +149,7 @@ export function MapaKms() {
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            <span>Nova Viagem</span>
+            <span>Nova</span>
           </Button>
         </div>
       </div>
@@ -359,3 +369,5 @@ export function MapaKms() {
     </div>
   );
 }
+// Default export para lazy loading
+export default MapaKms;

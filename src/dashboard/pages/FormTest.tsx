@@ -24,3 +24,6 @@ export const FormTest: React.FC = () => {
         </div>
     );
 };
+
+// Default export para lazy loading
+export default FormTest;

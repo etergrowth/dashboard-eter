@@ -75,11 +75,13 @@ flowchart TD
     BrowserN -->|Subscribe| Realtime
 ```
 
+
+
 ## Implementação
 
 ### 0. Redesenhar Interface do Chat (Pré-requisito UI)
 
-Modificar [`src/dashboard/pages/Finance/components/FinanceChat.tsx`](src/dashboard/pages/Finance/components/FinanceChat.tsx):
+Modificar `[src/dashboard/pages/Finance/components/FinanceChat.tsx](src/dashboard/pages/Finance/components/FinanceChat.tsx)`:
 
 **Mudanças no título:**
 
@@ -98,7 +100,7 @@ Modificar [`src/dashboard/pages/Finance/components/FinanceChat.tsx`](src/dashboa
 - Sem background (ou background muito subtil)
 - Aparência minimalista como ChatGPT
 
-**Atualizar textos em [`src/dashboard/pages/Finance/i18n.ts`](src/dashboard/pages/Finance/i18n.ts):**
+**Atualizar textos em `[src/dashboard/pages/Finance/i18n.ts](src/dashboard/pages/Finance/i18n.ts)`:**
 
 - `assistantTitle`: "Carla, Assistente Financeira"
 - `agentWelcome`: Mensagem de boas-vindas da Carla
@@ -113,7 +115,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE transacoes_financeiras;
 
 ### 2. Criar Hook de Realtime
 
-Criar [`src/dashboard/hooks/useTransactionsRealtime.ts`](src/dashboard/hooks/useTransactionsRealtime.ts):
+Criar `[src/dashboard/hooks/useTransactionsRealtime.ts](src/dashboard/hooks/useTransactionsRealtime.ts)`:
 
 - Subscribe a mudanças INSERT/UPDATE/DELETE na tabela `transacoes_financeiras`
 - Invalidar queries do React Query quando houver mudanças
@@ -141,14 +143,14 @@ const channel = supabase
 
 ### 3. Integrar Realtime no useTransactions
 
-Modificar [`src/dashboard/hooks/useTransactions.ts`](src/dashboard/hooks/useTransactions.ts):
+Modificar `[src/dashboard/hooks/useTransactions.ts](src/dashboard/hooks/useTransactions.ts)`:
 
 - Importar e usar o hook `useTransactionsRealtime`
 - Garantir que a subscription é limpa no cleanup
 
 ### 4. Criar Edge Function para Processamento Automático
 
-Criar/modificar [`supabase/functions/process-receipt-ocr/index.ts`](supabase/functions/process-receipt-ocr/index.ts):
+Criar/modificar `[supabase/functions/process-receipt-ocr/index.ts](supabase/functions/process-receipt-ocr/index.ts)`:
 
 - Trigger automático quando um recibo é inserido em `recibos_transacoes`
 - Ler ficheiro do Storage usando o `file_path`
@@ -189,7 +191,7 @@ CREATE TRIGGER on_recibo_inserted
 
 ### 6. Modificar Fluxo de Upload
 
-Atualizar [`src/dashboard/pages/Finance/index.tsx`](src/dashboard/pages/Finance/index.tsx):
+Atualizar `[src/dashboard/pages/Finance/index.tsx](src/dashboard/pages/Finance/index.tsx)`:
 
 - Após upload bem-sucedido, criar registo em `recibos_transacoes`
 - Remover chamada manual a `processImage`
@@ -206,7 +208,7 @@ Criar componente de feedback visual:
 
 ### 8. Badge de Status em Tempo Real
 
-O badge já existe em [`TransactionsHistory.tsx`](src/dashboard/pages/Finance/components/TransactionsHistory.tsx):
+O badge já existe em `[TransactionsHistory.tsx](src/dashboard/pages/Finance/components/TransactionsHistory.tsx)`:
 
 - Com Realtime ativo, o badge atualiza automaticamente
 - Quando `estado` muda de 'pendente' para 'verificado', todos os browsers veem a mudança
@@ -234,3 +236,4 @@ O badge já existe em [`TransactionsHistory.tsx`](src/dashboard/pages/Finance/co
 - Feedback visual em tempo real do estado das transações
 - Redução de cliques e ações manuais
 - Experiência mais fluida e moderna
+

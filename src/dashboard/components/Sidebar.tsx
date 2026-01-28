@@ -20,7 +20,7 @@ import {
 import { ChevronLeft, ChevronRight, X, GripVertical } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { useIsMobile } from '../../hooks/use-mobile';
-import { ICON_MAP, type NavigationItemConfig } from './navigation/constants';
+import { ICON_MAP, DEFAULT_NAVIGATION, type NavigationItemConfig } from './navigation/constants';
 import { SortableNavItem } from './navigation/SortableNavItem';
 import { ContextMenu } from './navigation/ContextMenu';
 
@@ -36,6 +36,51 @@ export function Sidebar() {
   } = useStore();
   const isMobile = useIsMobile();
   const location = useLocation();
+
+  // Migrar navigationItems: adicionar novos itens do DEFAULT_NAVIGATION que não existem
+  useEffect(() => {
+    const defaultIds = new Set(DEFAULT_NAVIGATION.map(item => item.id));
+    const currentIds = new Set(navigationItems.map(item => item.id));
+    
+    // IDs que devem ser removidos (agora são subitens)
+    const idsToRemove = new Set(['estatisticas-kms', 'leads-website']);
+    
+    // Verificar se há itens faltando ou se precisa remover/atualizar
+    const missingIds = Array.from(defaultIds).filter(id => !currentIds.has(id));
+    const hasItemsToRemove = navigationItems.some(item => idsToRemove.has(item.id));
+    const needsUpdate = missingIds.length > 0 || hasItemsToRemove;
+    
+    if (needsUpdate) {
+      // Adicionar itens faltantes
+      const existingItemsMap = new Map(navigationItems.map(item => [item.id, item]));
+      const newItems: NavigationItemConfig[] = [];
+      
+      DEFAULT_NAVIGATION.forEach(defaultItem => {
+        const existing = existingItemsMap.get(defaultItem.id);
+        if (existing) {
+          // Se o item tem subitens no DEFAULT_NAVIGATION, mesclar com os existentes
+          if (defaultItem.subItems && defaultItem.subItems.length > 0) {
+            newItems.push({ ...existing, subItems: defaultItem.subItems });
+          } else {
+            newItems.push(existing);
+          }
+        } else {
+          newItems.push(defaultItem);
+        }
+      });
+      
+      // Adicionar itens antigos que não estão mais no DEFAULT_NAVIGATION e não devem ser removidos
+      navigationItems.forEach(item => {
+        if (!defaultIds.has(item.id) && !idsToRemove.has(item.id)) {
+          newItems.push(item);
+        }
+      });
+      
+      // Reordenar e atualizar
+      const sorted = newItems.sort((a, b) => a.order - b.order);
+      useStore.setState({ navigationItems: sorted });
+    }
+  }, [navigationItems]);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
