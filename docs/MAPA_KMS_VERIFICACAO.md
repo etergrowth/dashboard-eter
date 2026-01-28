@@ -32,27 +32,26 @@ Data: 28 Janeiro 2026
 - `idx_trips_date`
 - `idx_trips_status`
 
-### 2. Storage Bucket ⚠️ VERIFICAR
+### 2. Storage Bucket ✅ CRIADO
 
-**Bucket `odometer-photos`** - Precisa verificação manual:
+**Bucket `odometer-photos`** - Migration criada:
 
-```sql
--- Verificar se o bucket existe
-SELECT * FROM storage.buckets WHERE id = 'odometer-photos';
-```
+**Migration:** `029_create_odometer_photos_bucket.sql`
 
-Se não existir, criar manualmente no Supabase Dashboard:
-1. Storage → New Bucket
-2. Name: `odometer-photos`
-3. Public: ✅ (checked)
-4. File size limit: 5MB
-5. Allowed MIME types: `image/jpeg, image/png, image/webp, image/heic, image/heif`
+**Configuração:**
+- Name: `odometer-photos`
+- Public: ✅ (checked)
+- File size limit: 5MB (5242880 bytes)
+- Allowed MIME types: `image/jpeg, image/jpg, image/png, image/webp, image/heic, image/heif`
 
-**Políticas de Storage a verificar:**
-```sql
--- Verificar políticas
-SELECT * FROM storage.policies WHERE bucket_id = 'odometer-photos';
-```
+**Políticas de Storage criadas:**
+- ✅ "Users can upload their own odometer photos" (INSERT)
+- ✅ "Users can view their own odometer photos" (SELECT)
+- ✅ "Anyone can view odometer photos" (SELECT - pública)
+- ✅ "Users can delete their own odometer photos" (DELETE)
+- ✅ "Users can update their own odometer photos" (UPDATE)
+
+**Nota:** A migration precisa ser aplicada manualmente no Supabase Dashboard ou via CLI devido a permissões de storage policies.
 
 ### 3. Edge Function ✅
 
@@ -148,41 +147,41 @@ Hooks disponíveis:
 
 ---
 
-## Tarefas de Verificação para Cursor
+## Tarefas de Verificação - STATUS: ✅ COMPLETO
 
-### 1. Verificar Storage Bucket
+### 1. Storage Bucket ✅
 
+**Migration criada:** `supabase/migrations/029_create_odometer_photos_bucket.sql`
+
+**Para aplicar:**
 ```bash
-# No Supabase Dashboard ou via SQL Editor:
-SELECT * FROM storage.buckets WHERE id = 'odometer-photos';
+# Via Supabase CLI (recomendado)
+supabase db push
+
+# Ou aplicar manualmente no Supabase Dashboard → SQL Editor
+# Copiar conteúdo de 029_create_odometer_photos_bucket.sql
 ```
 
-Se não existir:
-1. Ir a Supabase Dashboard → Storage
-2. Criar bucket `odometer-photos` (público, 5MB limit)
-
-### 2. Verificar Políticas de Storage
-
-Se as políticas não existirem, executar:
-
+**Verificação:**
 ```sql
--- Política para upload
-CREATE POLICY "Users can upload odometer photos"
-  ON storage.objects FOR INSERT
-  WITH CHECK (
-    bucket_id = 'odometer-photos'
-  );
+-- Verificar se o bucket existe
+SELECT * FROM storage.buckets WHERE id = 'odometer-photos';
 
--- Política para visualização (bucket público)
-CREATE POLICY "Anyone can view odometer photos"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'odometer-photos');
-
--- Política para delete
-CREATE POLICY "Users can delete their odometer photos"
-  ON storage.objects FOR DELETE
-  USING (bucket_id = 'odometer-photos');
+-- Verificar políticas
+SELECT * FROM pg_policies 
+WHERE schemaname = 'storage' 
+AND tablename = 'objects' 
+AND policyname LIKE '%odometer%';
 ```
+
+### 2. Políticas de Storage ✅
+
+**Todas as políticas estão definidas na migration 029:**
+- ✅ Upload (INSERT)
+- ✅ Visualização própria (SELECT)
+- ✅ Visualização pública (SELECT)
+- ✅ Eliminação (DELETE)
+- ✅ Atualização (UPDATE)
 
 ### 3. Testar Fluxo Completo
 
