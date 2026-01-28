@@ -580,6 +580,66 @@ export interface Database {
           criado_em?: string;
         };
       };
+      trips: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          reason: string;
+          start_km: number | null;
+          end_km: number | null;
+          distance: number | null;
+          start_location: string | null;
+          end_location: string | null;
+          start_lat: number | null;
+          start_lng: number | null;
+          end_lat: number | null;
+          end_lng: number | null;
+          start_photo_url: string | null;
+          end_photo_url: string | null;
+          status: 'draft' | 'completed';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date?: string;
+          reason: string;
+          start_km?: number | null;
+          end_km?: number | null;
+          start_location?: string | null;
+          end_location?: string | null;
+          start_lat?: number | null;
+          start_lng?: number | null;
+          end_lat?: number | null;
+          end_lng?: number | null;
+          start_photo_url?: string | null;
+          end_photo_url?: string | null;
+          status?: 'draft' | 'completed';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          reason?: string;
+          start_km?: number | null;
+          end_km?: number | null;
+          start_location?: string | null;
+          end_location?: string | null;
+          start_lat?: number | null;
+          start_lng?: number | null;
+          end_lat?: number | null;
+          end_lng?: number | null;
+          start_photo_url?: string | null;
+          end_photo_url?: string | null;
+          status?: 'draft' | 'completed';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

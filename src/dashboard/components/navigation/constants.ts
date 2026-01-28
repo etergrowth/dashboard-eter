@@ -7,6 +7,7 @@ import {
   Target,
   Wallet,
   Inbox,
+  Car,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -28,6 +29,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   FileText,
   Wallet,
   Image,
+  Car,
 };
 
 export const DEFAULT_NAVIGATION: NavigationItemConfig[] = [
@@ -39,4 +41,5 @@ export const DEFAULT_NAVIGATION: NavigationItemConfig[] = [
   { id: 'propostas', name: 'Propostas', to: '/dashboard/proposals', iconKey: 'FileText', visible: true, order: 5 },
   { id: 'financas', name: 'Finanças', to: '/dashboard/finance', iconKey: 'Wallet', visible: true, order: 6 },
   { id: 'cms', name: 'CMS', to: '/dashboard/cms', iconKey: 'Image', visible: true, order: 7 },
+  { id: 'mapa-kms', name: 'Mapa Kms', to: '/dashboard/mapa-kms', iconKey: 'Car', visible: true, order: 8 },
 ];

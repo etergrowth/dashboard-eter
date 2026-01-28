@@ -40,6 +40,10 @@ export type ProposalItem = Database['public']['Tables']['proposal_items']['Row']
 export type ProposalItemInsert = Database['public']['Tables']['proposal_items']['Insert'];
 export type ProposalItemUpdate = Database['public']['Tables']['proposal_items']['Update'];
 
+export type Trip = Database['public']['Tables']['trips']['Row'];
+export type TripInsert = Database['public']['Tables']['trips']['Insert'];
+export type TripUpdate = Database['public']['Tables']['trips']['Update'];
+
 // Enums
 export type ClientStatus = 'lead' | 'proposal' | 'negotiation' | 'closed' | 'lost';
 export type ClientPriority = 'low' | 'medium' | 'high';
@@ -48,3 +52,4 @@ export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'c
 export type InteractionType = 'call' | 'email' | 'meeting' | 'note';
 export type KanbanColumn = 'todo' | 'doing' | 'done';
 export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'negotiating';
+export type TripStatus = 'draft' | 'completed';

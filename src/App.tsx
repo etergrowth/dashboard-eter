@@ -21,6 +21,8 @@ import { ProposalDetails } from './dashboard/pages/Proposals/ProposalDetails';
 import { LeadsQueue, LeadDetail, MetricsDashboard, LeadsPendentes } from './dashboard/pages/Sandbox';
 import { Finance } from './dashboard/pages/Finance';
 import { FinanceStatistics } from './dashboard/pages/Finance/Statistics';
+import { MapaKms } from './dashboard/pages/MapaKms';
+import { NewTrip } from './dashboard/pages/MapaKms/NewTrip';
 
 function App() {
   return (
@@ -52,6 +54,8 @@ function App() {
               <Route path="sandbox/:id" element={<LeadDetail />} />
               <Route path="sandbox/metrics" element={<MetricsDashboard />} />
               <Route path="sandbox/pendentes" element={<LeadsPendentes />} />
+              <Route path="mapa-kms" element={<MapaKms />} />
+              <Route path="mapa-kms/nova" element={<NewTrip />} />
             </Route>
           </Route>
 
