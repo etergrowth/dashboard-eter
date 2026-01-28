@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -6,12 +7,40 @@ import { useAuth } from '@/hooks/useAuth';
  */
 export const ProtectedRoute = () => {
   const { isAuthenticated, isLoading, session } = useAuth();
+  const [showTimeout, setShowTimeout] = useState(false);
 
-  // Durante loading inicial (sem sessão conhecida), não redirecionar imediatamente
-  // Isso evita flash de redirect enquanto React Query ainda está a carregar
+  // Mostrar mensagem de timeout após 5 segundos de loading
+  useEffect(() => {
+    if (isLoading && !session) {
+      const timer = setTimeout(() => {
+        setShowTimeout(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+    setShowTimeout(false);
+  }, [isLoading, session]);
+
+  // Durante loading inicial, mostrar indicador visual em vez de tela branca
   if (isLoading && !session) {
-    // Retornar null para evitar flash - o layout pode mostrar skeleton se necessário
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4" />
+          <p className="text-muted-foreground">A carregar...</p>
+          {showTimeout && (
+            <div className="mt-4 text-sm">
+              <p className="text-yellow-500">A demorar mais do que esperado...</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-primary underline mt-2 hover:opacity-80 transition-opacity"
+              >
+                Recarregar página
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   // Após loading, se não há sessão, redirecionar para login

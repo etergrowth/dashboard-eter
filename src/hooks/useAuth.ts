@@ -84,14 +84,38 @@ export const useAuth = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [isEmailAllowed, setIsEmailAllowed] = useState<boolean | null>(null);
 
-  // Query para obter sessão atual
-  const { data: session, isLoading } = useQuery({
+  // Query para obter sessão atual com timeout
+  const { data: session, isLoading, error: sessionError } = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
+      // Criar uma promise com timeout de 10 segundos
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+      );
+      
+      const sessionPromise = supabase.auth.getSession();
+      
+      try {
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]);
+        
+        if (error) {
+          console.error('[useAuth] Session error:', error);
+          return null;
+        }
+        
+        return session;
+      } catch (err) {
+        console.error('[useAuth] Session fetch failed:', err);
+        return null;
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: 2, // Tentar 2 vezes em caso de falha
+    retryDelay: 1000, // 1 segundo entre tentativas
+    gcTime: 0, // Não manter em cache queries falhadas
   });
 
   // Query para obter utilizador atual
