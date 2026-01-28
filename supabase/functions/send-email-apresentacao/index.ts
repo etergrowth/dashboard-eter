@@ -24,8 +24,8 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html>
         }
         .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
         .header { padding: 40px 40px 20px 40px; }
-        .logo { width: 28px; height: 28px; margin-bottom: 20px; }
-        .logo img { width: 100%; height: 100%; display: block; }
+        .logo { margin-bottom: 20px; }
+        .logo img { width: 28px; height: 28px; display: block; }
         .content { padding: 0 40px 40px 40px; }
         .greeting { font-size: 16px; color: #1a1a1a; margin-bottom: 24px; font-weight: 600; }
         .main-text { color: #1a1a1a; font-size: 15px; margin-bottom: 20px; line-height: 1.6; font-weight: 400; }
@@ -45,7 +45,11 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html>
     <div class="email-container">
         <div class="header">
             <div class="logo">
-                <img src="https://ozjafmkfabewxoyibirq.supabase.co/storage/v1/object/public/etergrowthweb/etergrowth.com.svg" alt="Eter Growth">
+                <img src="https://ozjafmkfabewxoyibirq.supabase.co/storage/v1/object/public/etergrowthweb/logo_eter_84_px.png" 
+                     alt="Eter Growth" 
+                     width="28" 
+                     height="28" 
+                     style="width: 28px; height: 28px; display: block; border: 0; outline: none;">
             </div>
         </div>
         <div class="content">
@@ -213,12 +217,30 @@ Deno.serve(async (req: Request) => {
     // 6. Preparar HTML do email (substituir placeholder)
     const emailHtml = EMAIL_TEMPLATE.replace('{{LEAD_NAME}}', lead_name);
 
-    // 7. Criar mensagem MIME
+    // 7. Codificar assunto usando RFC 2047 para suportar caracteres especiais
+    const encodeSubject = (subject: string): string => {
+      // Verificar se contém caracteres não-ASCII
+      if (/^[\x00-\x7F]*$/.test(subject)) {
+        return subject; // Apenas ASCII, não precisa codificar
+      }
+      // Converter string para bytes UTF-8
+      const utf8Bytes = new TextEncoder().encode(subject);
+      // Codificar em Base64
+      const base64 = btoa(String.fromCharCode(...utf8Bytes))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+      return `=?UTF-8?B?${base64}?=`;
+    };
+
+    const subject = encodeSubject('Apresentação Eter Growth');
+
+    // 8. Criar mensagem MIME
     const boundary = '----=_Part_' + Date.now();
     const message = [
       `From: ${GMAIL_FROM_NAME} <${GMAIL_FROM_EMAIL}>`,
       `To: ${lead_email}`,
-      `Subject: Apresentação Eter Growth`,
+      `Subject: ${subject}`,
       `MIME-Version: 1.0`,
       `Content-Type: multipart/alternative; boundary="${boundary}"`,
       '',
@@ -231,8 +253,10 @@ Deno.serve(async (req: Request) => {
       `--${boundary}--`,
     ].join('\r\n');
 
-    // Codificar em Base64 URL-safe
-    const encodedMessage = btoa(unescape(encodeURIComponent(message)))
+    // Codificar mensagem em Base64 (não URL-safe, usar Base64 padrão para Gmail API)
+    // Converter para bytes UTF-8 primeiro
+    const messageBytes = new TextEncoder().encode(message);
+    const encodedMessage = btoa(String.fromCharCode(...messageBytes))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');

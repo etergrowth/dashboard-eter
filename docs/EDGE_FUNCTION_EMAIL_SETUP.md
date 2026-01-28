@@ -12,6 +12,26 @@
 
 A Edge Function requer as seguintes variáveis de ambiente configuradas no Supabase Dashboard:
 
+**⚠️ IMPORTANTE:** As variáveis devem estar configuradas no Supabase Dashboard, não apenas no `.env.local` do frontend.
+
+#### Opção A: Via Script Automático (Recomendado)
+
+1. Certifique-se de que as variáveis estão no `.env.local`:
+```bash
+GMAIL_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=seu-client-secret
+GMAIL_REFRESH_TOKEN=seu-refresh-token
+GMAIL_FROM_EMAIL=hello@etergrowth.com (opcional)
+GMAIL_FROM_NAME=Eter Growth (opcional)
+```
+
+2. Execute o script:
+```bash
+./scripts/setup-edge-function-secrets.sh
+```
+
+#### Opção B: Via Supabase Dashboard (Manual)
+
 1. Aceda ao Supabase Dashboard
 2. Vá para **Edge Functions** > **Secrets**
 3. Adicione as seguintes variáveis:
@@ -22,6 +42,14 @@ GMAIL_CLIENT_SECRET=seu-client-secret
 GMAIL_REFRESH_TOKEN=seu-refresh-token
 GMAIL_FROM_EMAIL=hello@etergrowth.com (opcional, padrão: hello@etergrowth.com)
 GMAIL_FROM_NAME=Eter Growth (opcional, padrão: Eter Growth)
+```
+
+#### Opção C: Via Supabase CLI (Manual)
+
+```bash
+supabase secrets set GMAIL_CLIENT_ID="seu-client-id" --project-ref ozjafmkfabewxoyibirq
+supabase secrets set GMAIL_CLIENT_SECRET="seu-client-secret" --project-ref ozjafmkfabewxoyibirq
+supabase secrets set GMAIL_REFRESH_TOKEN="seu-refresh-token" --project-ref ozjafmkfabewxoyibirq
 ```
 
 ### 2. Como Obter as Credenciais Gmail
@@ -92,21 +120,68 @@ Para testar se está a funcionar:
 
 ## Troubleshooting
 
-### Erro: "Gmail não configurado"
-- Verifique se todas as variáveis de ambiente estão configuradas no Supabase Dashboard
-- Verifique se os nomes das variáveis estão corretos (case-sensitive)
+### Erro: "Edge Function returned a non-2xx status code"
 
-### Erro: "Erro ao autenticar com Gmail"
+Este erro geralmente indica que as variáveis de ambiente não estão configuradas no Supabase. Siga estes passos:
+
+1. **Verificar se os secrets estão configurados:**
+   ```bash
+   # Via CLI
+   supabase secrets list --project-ref ozjafmkfabewxoyibirq
+   
+   # Ou verifique no Dashboard: Edge Functions > Secrets
+   ```
+
+2. **Configurar os secrets:**
+   ```bash
+   # Use o script automático
+   ./scripts/setup-edge-function-secrets.sh
+   
+   # Ou configure manualmente via Dashboard ou CLI
+   ```
+
+3. **Verificar os logs da Edge Function:**
+   - Aceda ao Supabase Dashboard
+   - Vá para **Edge Functions** > **send-email-apresentacao** > **Logs**
+   - Procure por mensagens de erro específicas
+
+### Erro: "Gmail não configurado"
+- ✅ **Solução:** Configure as variáveis de ambiente no Supabase Dashboard (Edge Functions > Secrets)
+- Verifique se todas as variáveis estão configuradas: `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`
+- Verifique se os nomes das variáveis estão corretos (case-sensitive)
+- **Importante:** As variáveis no `.env.local` do frontend NÃO são suficientes. Elas precisam estar no Supabase.
+
+### Erro: "Erro ao autenticar com Gmail" ou "Erro ao obter access token"
 - Verifique se o refresh token ainda é válido
 - Pode precisar gerar um novo refresh token
+- Verifique se o Client ID e Client Secret estão corretos
+- Verifique se a Gmail API está ativada no Google Cloud Console
 
 ### Erro: "Lead não encontrada ou sem permissão"
 - Verifique se a lead pertence ao utilizador autenticado
 - Verifique se o `lead_id` está correto
+- Verifique se o utilizador está autenticado (token JWT válido)
+
+### Erro: "Missing authorization header"
+- O utilizador não está autenticado
+- Faça login novamente no dashboard
 
 ### Email não aparece na timeline
 - A Edge Function cria a atividade automaticamente
 - Se não aparecer, verifique os logs da Edge Function no Supabase Dashboard
+- Verifique se a tabela `sandbox_activities` tem as políticas RLS corretas
+
+### Como verificar se os secrets estão configurados
+
+**Via Dashboard:**
+1. Aceda ao Supabase Dashboard
+2. Vá para **Edge Functions** > **Secrets**
+3. Verifique se todas as variáveis Gmail estão listadas
+
+**Via CLI:**
+```bash
+supabase secrets list --project-ref ozjafmkfabewxoyibirq
+```
 
 ## Logs
 

@@ -67,8 +67,8 @@ export function EmailPreviewModal({
           </div>
         </div>
 
-        <div className="border-t bg-background px-6 py-4">
-          <div className="flex gap-3">
+        <div className="border-t bg-background px-6 pt-[10px] pb-4 flex items-center justify-center min-h-[72px]">
+          <div className="flex gap-3 w-full max-w-md items-center justify-center">
             <Button
               type="button"
               variant="outline"

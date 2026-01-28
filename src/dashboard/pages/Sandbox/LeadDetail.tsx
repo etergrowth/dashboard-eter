@@ -128,13 +128,42 @@ export function LeadDetail() {
         },
       });
 
+      // Verificar se há erro na resposta
       if (error) {
         console.error('Erro ao chamar Edge Function:', error);
-        throw new Error(error.message || 'Erro ao enviar email');
+        
+        // Tentar extrair mensagem de erro mais detalhada
+        let errorMessage = error.message || 'Erro ao enviar email';
+        
+        // Se o erro contém dados, tentar extrair a mensagem
+        if (error.context && error.context.body) {
+          try {
+            const errorBody = typeof error.context.body === 'string' 
+              ? JSON.parse(error.context.body) 
+              : error.context.body;
+            if (errorBody.error) {
+              errorMessage = errorBody.error;
+            }
+            if (errorBody.details) {
+              errorMessage += `: ${errorBody.details}`;
+            }
+          } catch (e) {
+            // Ignorar erro de parsing
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || 'Falha ao enviar email');
+      // Verificar se a resposta indica falha
+      if (!data) {
+        throw new Error('Resposta vazia da Edge Function');
+      }
+
+      if (!data.success) {
+        const errorMsg = data.error || data.message || 'Falha ao enviar email';
+        const details = data.details ? `: ${data.details}` : '';
+        throw new Error(`${errorMsg}${details}`);
       }
 
       // Sucesso - a Edge Function já criou a atividade e atualizou o status
@@ -150,15 +179,20 @@ export function LeadDetail() {
       
       // Mensagens de erro mais específicas
       if (errorMessage.includes('Gmail não configurado') || errorMessage.includes('GMAIL')) {
-        toast.error('Gmail não configurado. Verifique as variáveis de ambiente na Edge Function.');
-      } else if (errorMessage.includes('autenticação') || errorMessage.includes('token')) {
-        toast.error('Erro de autenticação Gmail. Verifique as credenciais.');
+        toast.error(
+          'Gmail não configurado. Configure as variáveis de ambiente no Supabase Dashboard: Edge Functions > Secrets',
+          { duration: 5000 }
+        );
+      } else if (errorMessage.includes('autenticação') || errorMessage.includes('token') || errorMessage.includes('Unauthorized')) {
+        toast.error('Erro de autenticação Gmail. Verifique as credenciais e o refresh token.');
       } else if (errorMessage.includes('Email inválido')) {
         toast.error('Email inválido. Verifique o endereço de email.');
       } else if (errorMessage.includes('Lead não encontrada')) {
         toast.error('Lead não encontrada ou sem permissão.');
+      } else if (errorMessage.includes('Missing authorization')) {
+        toast.error('Erro de autenticação. Por favor, faça login novamente.');
       } else {
-        toast.error(`Erro ao enviar email: ${errorMessage}`);
+        toast.error(`Erro ao enviar email: ${errorMessage}`, { duration: 5000 });
       }
     } finally {
       setIsSendingEmail(false);
