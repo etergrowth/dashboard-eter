@@ -212,17 +212,18 @@ export function LeadDetails() {
             <div className="flex items-center justify-between">
                 <button
                     onClick={() => navigate('/dashboard/crm')}
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1.5 md:gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
                 >
-                    <ArrowLeft size={18} />
-                    <span>Voltar ao CRM</span>
+                    <ArrowLeft size={16} className="md:w-[18px] md:h-[18px]" />
+                    <span className="hidden sm:inline">Voltar ao CRM</span>
+                    <span className="sm:hidden">Voltar</span>
                 </button>
-                <div className="flex gap-3">
+                <div className="flex gap-2 md:gap-3">
                     <button
                         onClick={handleDelete}
-                        className="p-2.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl border border-red-500/20 transition-all"
+                        className="p-2 md:p-2.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl border border-red-500/20 transition-all"
                     >
-                        <Trash2 size={20} />
+                        <Trash2 size={18} className="md:w-5 md:h-5" />
                     </button>
                 </div>
             </div>
@@ -345,18 +346,19 @@ export function LeadDetails() {
                     </div>
 
                     {/* Interactions / History */}
-                    <div className="glass-panel rounded-3xl overflow-hidden flex flex-col h-[500px]">
-                        <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <MessageSquare className="text-primary" size={20} />
-                                <h3 className="text-xl font-bold text-foreground">Histórico de Interações</h3>
+                    <div className="glass-panel rounded-2xl md:rounded-3xl overflow-hidden flex flex-col h-[400px] md:h-[500px]">
+                        <div className="p-4 md:p-8 border-b border-white/5 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                                <MessageSquare className="text-primary flex-shrink-0" size={18} />
+                                <h3 className="text-base md:text-xl font-bold text-foreground truncate">Histórico</h3>
                             </div>
                             <button
                                 onClick={() => setShowInteractionModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-accent text-foreground rounded-xl border border-border transition-all text-xs font-bold"
+                                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-secondary hover:bg-accent text-foreground rounded-xl border border-border transition-all text-xs font-bold flex-shrink-0"
                             >
                                 <Plus size={14} />
-                                NOVA INTERAÇÃO
+                                <span className="hidden sm:inline">NOVA INTERAÇÃO</span>
+                                <span className="sm:hidden">NOVA</span>
                             </button>
                         </div>
 
@@ -440,7 +442,7 @@ export function LeadDetails() {
             {/* Interaction Modal */}
             <AnimatePresence>
                 {showInteractionModal && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+                    <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-6">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -449,14 +451,14 @@ export function LeadDetails() {
                             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative bg-white border border-border w-full max-w-md rounded-3xl overflow-hidden shadow-2xl p-8 space-y-6"
+                            initial={{ opacity: 0, y: 100 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 100 }}
+                            className="relative bg-white border border-border w-full max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden shadow-2xl p-6 md:p-8 space-y-4 md:space-y-6 max-h-[90vh] overflow-y-auto"
                         >
                             <h3 className="text-xl font-bold text-foreground">{editingInteraction ? 'Editar Interação' : 'Registar Interação'}</h3>
 
-                            <div className="space-y-4">
+                            <div className="space-y-3 md:space-y-4">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-gray-500 uppercase">Título</label>
                                     <input
@@ -464,17 +466,17 @@ export function LeadDetails() {
                                         value={newInteraction.title}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, title: e.target.value })}
                                         placeholder="Ex: Reunião de Alinhamento"
-                                        className="w-full bg-secondary border border-border text-foreground px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full bg-secondary border border-border text-foreground px-3 md:px-4 py-2.5 md:py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Data</label>
                                         <input
                                             type="date"
                                             value={newInteraction.date}
                                             onChange={(e) => setNewInteraction({ ...newInteraction, date: e.target.value })}
-                                            className="w-full bg-secondary border border-border text-foreground px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                            className="w-full bg-secondary border border-border text-foreground px-3 md:px-4 py-2.5 md:py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -482,7 +484,7 @@ export function LeadDetails() {
                                         <select
                                             value={newInteraction.type}
                                             onChange={(e) => setNewInteraction({ ...newInteraction, type: e.target.value })}
-                                            className="w-full bg-secondary border border-border text-foreground px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                            className="w-full bg-secondary border border-border text-foreground px-3 md:px-4 py-2.5 md:py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                                         >
                                             <option value="note">Nota</option>
                                             <option value="call">Chamada</option>
@@ -498,7 +500,7 @@ export function LeadDetails() {
                                         value={newInteraction.location}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, location: e.target.value })}
                                         placeholder="Ex: Zoom, Escritório, etc."
-                                        className="w-full bg-secondary border border-border text-foreground px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full bg-secondary border border-border text-foreground px-3 md:px-4 py-2.5 md:py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
@@ -506,23 +508,23 @@ export function LeadDetails() {
                                     <textarea
                                         value={newInteraction.description}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, description: e.target.value })}
-                                        rows={4}
+                                        rows={3}
                                         placeholder="O que foi discutido?"
-                                        className="w-full bg-secondary border border-border text-foreground px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                                        className="w-full bg-secondary border border-border text-foreground px-3 md:px-4 py-2.5 md:py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-sm"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 pt-4">
+                            <div className="flex gap-3 md:gap-4 pt-2 md:pt-4">
                                 <button
                                     onClick={() => { setShowInteractionModal(false); setEditingInteraction(null); setNewInteraction({ title: '', description: '', location: '', type: 'note', date: new Date().toISOString().split('T')[0] }); }}
-                                    className="flex-1 py-4 text-muted-foreground font-bold hover:text-foreground transition-colors"
+                                    className="flex-1 py-3 md:py-4 text-muted-foreground font-bold hover:text-foreground transition-colors text-sm"
                                 >
                                     CANCELAR
                                 </button>
                                 <button
                                     onClick={editingInteraction ? handleUpdateInteraction : handleAddInteraction}
-                                    className="flex-1 py-4 bg-primary text-primary-foreground font-bold rounded-2xl hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-95"
+                                    className="flex-1 py-3 md:py-4 bg-primary text-primary-foreground font-bold rounded-2xl hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-95 text-sm"
                                 >
                                     GUARDAR
                                 </button>

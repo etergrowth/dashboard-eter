@@ -92,16 +92,16 @@ export function ManualTransactionForm({ onTransactionCreated, isSubmitting = fal
 
   return (
     <Card className="w-full flex flex-col">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 md:pb-3 p-4 md:p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">📝 Entrada Manual</CardTitle>
-          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+          <CardTitle className="text-base md:text-lg">📝 Entrada Manual</CardTitle>
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
             Manual
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col">
-        <form onSubmit={handleSubmit} className="space-y-4 flex flex-col">
+      <CardContent className="flex flex-col p-4 md:p-6">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4 flex flex-col">
           {/* Tipo de Transação */}
           <div className="space-y-2">
             <Label htmlFor="tipo">Tipo de Transação</Label>
@@ -235,10 +235,11 @@ export function ManualTransactionForm({ onTransactionCreated, isSubmitting = fal
           </div>
 
           {/* Botão de Submissão */}
-          <div className="pt-4">
+          <div className="pt-2 md:pt-4">
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full text-sm" 
+              size="sm"
               disabled={
                 isSubmitting || 
                 !formData.tipo || 
@@ -251,14 +252,14 @@ export function ManualTransactionForm({ onTransactionCreated, isSubmitting = fal
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4 animate-spin" />
                   A guardar...
                 </>
               ) : (
                 'Criar Transação'
               )}
             </Button>
-            <p className="text-xs text-muted-foreground text-center mt-2">
+            <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-1.5 md:mt-2">
               * Campos obrigatórios
             </p>
           </div>

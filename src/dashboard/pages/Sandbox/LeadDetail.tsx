@@ -29,6 +29,7 @@ import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { LoadingState } from '../../components/sections';
 import { useDebouncedCallback } from '../../../hooks/useDebounce';
+import { useIsMobile } from '../../../hooks/use-mobile';
 import { getEmailApresentacaoHtml } from '../../../lib/email/gmail';
 import { supabase } from '../../../lib/supabase';
 
@@ -41,6 +42,7 @@ export function LeadDetail() {
   const convertLead = useConvertLeadToClient();
   const updateScratchpad = useUpdateScratchpad();
   const createActivity = useCreateSandboxActivity();
+  const isMobile = useIsMobile();
 
   const [scratchpadNotes, setScratchpadNotes] = useState('');
   const [showQuickLog, setShowQuickLog] = useState(false);
@@ -241,9 +243,9 @@ export function LeadDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'} gap-6`}>
         {/* Coluna Principal */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={`${isMobile ? '' : 'lg:col-span-2'} space-y-6`}>
           {/* Header Card */}
           <Card className="border border-border">
             <CardHeader>
@@ -269,7 +271,7 @@ export function LeadDetail() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 mb-4`}>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar size={16} />
                   <span>Adicionada: {format(new Date(lead.date_created), "d 'de' MMMM, yyyy", { locale: pt })}</span>
@@ -281,11 +283,11 @@ export function LeadDetail() {
                   </div>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className={`flex ${isMobile ? 'flex-col' : 'gap-2'} gap-2`}>
                 <Button
                   onClick={handleConvertToCRM}
                   disabled={lead.status === 'crm_ready' || convertLead.isPending}
-                  className="flex-1"
+                  className={isMobile ? 'w-full' : 'flex-1'}
                 >
                   <CheckCircle2 size={16} className="mr-2" />
                   Converter para CRM
@@ -294,7 +296,7 @@ export function LeadDetail() {
                   variant="destructive"
                   onClick={handleMarkAsDead}
                   disabled={lead.status === 'dead' || updateLead.isPending}
-                  className="flex-1"
+                  className={isMobile ? 'w-full' : 'flex-1'}
                 >
                   <XCircle size={16} className="mr-2" />
                   Marcar como Morta
@@ -319,12 +321,13 @@ export function LeadDetail() {
                 rows={6}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
               />
-              <div className="flex gap-2">
+              <div className={`flex ${isMobile ? 'flex-col' : 'gap-2'} gap-2`}>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCopyToHistory}
                   disabled={!scratchpadNotes.trim()}
+                  className={isMobile ? 'w-full' : ''}
                 >
                   Copiar para Histórico
                 </Button>
@@ -337,6 +340,7 @@ export function LeadDetail() {
                       updateScratchpad.mutate({ leadId: id, notes: '' });
                     }
                   }}
+                  className={isMobile ? 'w-full' : ''}
                 >
                   Limpar
                 </Button>

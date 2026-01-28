@@ -78,11 +78,11 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory md:snap-none -mx-4 px-4 md:mx-0 md:px-0">
       {COLUMNS.map((column) => (
         <div
           key={column.id}
-          className="bg-white border border-border rounded-2xl p-4 shadow-sm"
+          className="min-w-[280px] md:min-w-0 snap-center md:snap-align-none bg-white border border-border rounded-2xl p-3 md:p-4 shadow-sm flex-shrink-0"
           onDragOver={handleDragOver}
           onDrop={() => handleDrop(column.id)}
         >

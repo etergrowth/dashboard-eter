@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { FileText, CheckCircle2, Clock } from 'lucide-react';
 import type { TransacaoFinanceira } from '@/types/finance';
+import { ResponsiveTable } from '@/dashboard/components/ResponsiveTable';
+import { MobileCard, MobileCardAction } from '@/dashboard/components/MobileCard';
 
 interface TransactionsHistoryProps {
   onReceiptClick?: (transactionId: string) => void;
@@ -116,76 +118,124 @@ export function TransactionsHistory({ onReceiptClick }: TransactionsHistoryProps
     );
   }
 
+  const columns = [
+    {
+      key: 'data',
+      label: TEXTS_PT.tableHeaderDate,
+      render: (transaction: TransacaoFinanceira) => formatDate(transaction.data_transacao),
+    },
+    {
+      key: 'descricao',
+      label: TEXTS_PT.tableHeaderDescription,
+      render: (transaction: TransacaoFinanceira) => (
+        <div>
+          <div className="font-medium">{transaction.comerciante || transaction.descricao}</div>
+          {transaction.comerciante && (
+            <div className="text-xs text-muted-foreground">{transaction.descricao}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'categoria',
+      label: TEXTS_PT.tableHeaderCategory,
+      render: (transaction: TransacaoFinanceira) => getCategoryBadge(transaction.categoria),
+    },
+    {
+      key: 'valor',
+      label: TEXTS_PT.tableHeaderAmount,
+      align: 'right' as const,
+      render: (transaction: TransacaoFinanceira) => formatCurrency(transaction.valor, transaction.tipo),
+    },
+    {
+      key: 'recibo',
+      label: TEXTS_PT.tableHeaderReceipt,
+      align: 'center' as const,
+      hideOnMobile: true,
+      render: (transaction: TransacaoFinanceira) =>
+        (transaction.recibo_url || transaction.id) ? (
+          <button
+            onClick={() => onReceiptClick?.(transaction.id)}
+            className="text-muted-foreground hover:text-primary transition-colors"
+            title="Ver recibo"
+          >
+            <FileText className="w-4 h-4" />
+          </button>
+        ) : null,
+    },
+    {
+      key: 'status',
+      label: TEXTS_PT.tableHeaderStatus,
+      align: 'center' as const,
+      render: (transaction: TransacaoFinanceira) => getStatusBadge(transaction.estado || 'pendente'),
+    },
+  ];
+
+  const mobileCardRender = (transaction: TransacaoFinanceira) => {
+    const statusColors: Record<string, string> = {
+      verificado: 'bg-green-500/10 text-green-600',
+      pendente: 'bg-yellow-500/10 text-yellow-600',
+    };
+
+    return (
+      <MobileCard
+        title={transaction.comerciante || transaction.descricao}
+        subtitle={transaction.comerciante ? transaction.descricao : undefined}
+        status={{
+          label: transaction.estado === 'verificado' ? TEXTS_PT.tableStatusVerified : TEXTS_PT.tableStatusPending,
+          color: statusColors[transaction.estado || 'pendente'] || statusColors.pendente,
+        }}
+        fields={[
+          {
+            label: 'Data',
+            value: formatDate(transaction.data_transacao),
+          },
+          {
+            label: 'Categoria',
+            value: getCategoryBadge(transaction.categoria),
+          },
+          {
+            label: 'Valor',
+            value: formatCurrency(transaction.valor, transaction.tipo),
+            highlight: true,
+          },
+        ]}
+        actions={
+          (transaction.recibo_url || transaction.id) && onReceiptClick ? (
+            <MobileCardAction
+              icon={FileText}
+              label="Ver Recibo"
+              onClick={() => onReceiptClick(transaction.id)}
+              variant="primary"
+            />
+          ) : undefined
+        }
+      />
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{TEXTS_PT.tableTitle}</CardTitle>
+          <CardTitle className="text-base md:text-lg">{TEXTS_PT.tableTitle}</CardTitle>
           <Button variant="ghost" size="sm" className="text-xs">
             {TEXTS_PT.tableViewAll}
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 px-2 text-xs font-medium text-muted-foreground">
-                  {TEXTS_PT.tableHeaderDate}
-                </th>
-                <th className="text-left py-2 px-2 text-xs font-medium text-muted-foreground">
-                  {TEXTS_PT.tableHeaderDescription}
-                </th>
-                <th className="text-left py-2 px-2 text-xs font-medium text-muted-foreground">
-                  {TEXTS_PT.tableHeaderCategory}
-                </th>
-                <th className="text-right py-2 px-2 text-xs font-medium text-muted-foreground">
-                  {TEXTS_PT.tableHeaderAmount}
-                </th>
-                <th className="text-center py-2 px-2 text-xs font-medium text-muted-foreground">
-                  {TEXTS_PT.tableHeaderReceipt}
-                </th>
-                <th className="text-center py-2 px-2 text-xs font-medium text-muted-foreground">
-                  {TEXTS_PT.tableHeaderStatus}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((transaction) => (
-                <tr key={transaction.id} className="border-b hover:bg-muted/50">
-                  <td className="py-3 px-2 text-sm">{formatDate(transaction.data_transacao)}</td>
-                  <td className="py-3 px-2 text-sm">
-                    <div>
-                      <div className="font-medium">{transaction.comerciante || transaction.descricao}</div>
-                      {transaction.comerciante && (
-                        <div className="text-xs text-muted-foreground">{transaction.descricao}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-3 px-2">{getCategoryBadge(transaction.categoria)}</td>
-                  <td className="py-3 px-2 text-right">
-                    {formatCurrency(transaction.valor, transaction.tipo)}
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    {(transaction.recibo_url || transaction.id) && (
-                      <button
-                        onClick={() => onReceiptClick?.(transaction.id)}
-                        className="text-muted-foreground hover:text-primary transition-colors"
-                        title="Ver recibo"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
-                    )}
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    {getStatusBadge(transaction.estado || 'pendente')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <CardContent className="p-3 md:p-6">
+        <ResponsiveTable
+          columns={columns}
+          data={transactions}
+          keyExtractor={(transaction) => transaction.id}
+          mobileCardRender={mobileCardRender}
+          emptyState={
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Ainda não há transações registadas.
+            </p>
+          }
+        />
       </CardContent>
     </Card>
   );

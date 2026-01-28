@@ -18,6 +18,8 @@ import type { Proposal, ProposalInsert } from '../../../types';
 import { Badge } from '../../../components/ui/badge';
 import { Checkbox } from '../../../components/ui/checkbox';
 import { convertToCSV, downloadCSV } from '../../../utils/export';
+import { useIsMobile } from '../../../hooks/use-mobile';
+import { MobileCard, MobileCardAction } from '../../components/MobileCard';
 
 interface ProposalsTableProps {
   onAddProposal?: () => void;
@@ -25,6 +27,7 @@ interface ProposalsTableProps {
 
 export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: proposals, isLoading } = useProposals();
   const createProposal = useCreateProposal();
   const updateProposal = useUpdateProposal();
@@ -543,10 +546,71 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
 
   const selectedCount = Object.keys(rowSelection).length;
 
+  // Mobile card render function
+  const renderMobileCard = (proposal: Proposal & { client?: { name: string; company: string | null } | null }) => {
+    const statusColors: Record<string, string> = {
+      draft: 'bg-gray-500/10 text-gray-400',
+      sent: 'bg-blue-500/20 text-blue-400',
+      negotiating: 'bg-yellow-500/20 text-yellow-400',
+      accepted: 'bg-green-500/20 text-green-400',
+      rejected: 'bg-red-500/20 text-red-400',
+    };
+
+    return (
+      <MobileCard
+        key={proposal.id}
+        title={proposal.title}
+        subtitle={proposal.description || undefined}
+        status={{
+          label: getStatusLabel(proposal.status),
+          color: statusColors[proposal.status || 'draft'] || statusColors.draft,
+        }}
+        fields={[
+          {
+            label: 'Cliente',
+            value: proposal.client?.name || 'Sem cliente',
+          },
+          {
+            label: 'Total',
+            value: `${proposal.total_amount?.toFixed(2) || '0.00'}€`,
+            highlight: true,
+          },
+          {
+            label: 'Margem',
+            value: `${proposal.total_margin?.toFixed(2) || '0.00'}€`,
+          },
+          {
+            label: 'Válida até',
+            value: proposal.valid_until
+              ? new Date(proposal.valid_until).toLocaleDateString('pt-PT')
+              : '-',
+          },
+        ]}
+        actions={
+          <div className="flex gap-2 w-full">
+            <MobileCardAction
+              icon={Eye}
+              label="Ver"
+              onClick={() => navigate(`/dashboard/proposals/${proposal.id}`)}
+              variant="primary"
+            />
+            <MobileCardAction
+              icon={Trash2}
+              label="Eliminar"
+              onClick={() => handleDelete(proposal.id, proposal.title)}
+              variant="danger"
+            />
+          </div>
+        }
+        onClick={() => navigate(`/dashboard/proposals/${proposal.id}`)}
+      />
+    );
+  };
+
   return (
-    <div className="glass-panel rounded-xl p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-card-foreground">Tabela de Propostas</h2>
+    <div className="glass-panel rounded-xl p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h2 className="text-base md:text-lg font-semibold text-card-foreground">Tabela de Propostas</h2>
         {!isAdding && (
           <button
             onClick={() => {
@@ -556,33 +620,34 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
                 setIsAdding(true);
               }
             }}
-            className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium"
+            className="glass-button px-3 md:px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-xs md:text-sm font-medium"
           >
-            <Plus className="w-4 h-4" />
-            Adicionar Proposta
+            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Adicionar Proposta</span>
+            <span className="sm:hidden">Adicionar</span>
           </button>
         )}
       </div>
 
       {/* Bulk Actions Bar */}
       {selectedCount > 0 && (
-        <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg mb-4 border border-primary/20">
-          <span className="text-sm font-medium text-card-foreground">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 md:p-4 bg-primary/10 rounded-lg mb-4 border border-primary/20">
+          <span className="text-xs md:text-sm font-medium text-card-foreground">
             {selectedCount} proposta(s) selecionada(s)
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button
               onClick={handleBulkDelete}
               disabled={deleteProposal.isPending}
-              className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition text-sm font-medium disabled:opacity-50"
+              className="flex-1 sm:flex-none px-3 md:px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition text-xs md:text-sm font-medium disabled:opacity-50"
             >
-              <Trash2 className="w-4 h-4 inline mr-2" />
+              <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 inline mr-1.5 md:mr-2" />
               Apagar
             </button>
             <select
               onChange={handleBulkStatusChange}
               defaultValue=""
-              className="px-4 py-2 bg-secondary border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              className="flex-1 sm:flex-none px-3 md:px-4 py-2 bg-secondary border border-border rounded-lg text-card-foreground text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             >
               <option value="">Mudar status...</option>
               <option value="draft">Rascunho</option>
@@ -593,186 +658,239 @@ export function ProposalsTable({ onAddProposal }: ProposalsTableProps = {}) {
             </select>
             <button
               onClick={handleBulkExport}
-              className="px-4 py-2 bg-secondary hover:bg-accent text-foreground rounded-lg transition text-sm font-medium flex items-center gap-2"
+              className="flex-1 sm:flex-none px-3 md:px-4 py-2 bg-secondary hover:bg-accent text-foreground rounded-lg transition text-xs md:text-sm font-medium flex items-center gap-1.5 md:gap-2"
             >
-              <Download className="w-4 h-4" />
-              Exportar
+              <Download className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Exportar</span>
             </button>
           </div>
         </div>
       )}
 
       <div>
-        <div className="flex items-center py-4">
+        <div className="flex items-center py-3 md:py-4">
           <input
             placeholder="Filtrar propostas..."
             value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("title")?.setFilterValue(event.target.value)
             }
-            className="max-w-sm px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            className="w-full sm:max-w-sm px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           />
         </div>
 
-        <div className="overflow-hidden rounded-md border border-border">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/10 border-b border-border">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <th
-                          key={header.id}
-                          className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground whitespace-nowrap"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-border">
-                {isAdding && (
-                  <tr className="bg-primary/5">
-                    <td className="px-4 py-3">
-                      {/* Checkbox column - empty for new row */}
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="text"
-                        value={formData.title || ''}
-                        onChange={(e) => handleChange('title', e.target.value)}
-                        placeholder="Título da proposta"
-                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-muted-foreground text-sm">Selecionar no formulário</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={formData.status || 'draft'}
-                        onChange={(e) => handleChange('status', e.target.value)}
-                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                      >
-                        <option value="draft">Rascunho</option>
-                        <option value="sent">Enviada</option>
-                        <option value="negotiating">Em Negociação</option>
-                        <option value="accepted">Aceite</option>
-                        <option value="rejected">Rejeitada</option>
-                      </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.total_amount || ''}
-                        onChange={(e) => handleChange('total_amount', e.target.value ? parseFloat(e.target.value) : null)}
-                        placeholder="0.00"
-                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.total_margin || ''}
-                        onChange={(e) => handleChange('total_margin', e.target.value ? parseFloat(e.target.value) : null)}
-                        placeholder="0.00"
-                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="date"
-                        value={formData.valid_until ? new Date(formData.valid_until).toISOString().split('T')[0] : ''}
-                        onChange={(e) => handleChange('valid_until', e.target.value || null)}
-                        className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={handleSave}
-                          disabled={!formData.title || createProposal.isPending}
-                          className="p-2 hover:bg-primary/20 rounded-lg transition text-primary disabled:opacity-50"
-                          title="Guardar"
-                        >
-                          <Save className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={handleCancel}
-                          className="p-2 hover:bg-muted/10 rounded-lg transition text-muted-foreground hover:text-card-foreground"
-                          title="Cancelar"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-muted/5 transition"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-4 py-3"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
+        {/* Mobile: Cards View */}
+        {isMobile ? (
+          <div className="space-y-3">
+            {isAdding && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                  placeholder="Título da proposta"
+                  className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                />
+                <select
+                  value={formData.status || 'draft'}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                >
+                  <option value="draft">Rascunho</option>
+                  <option value="sent">Enviada</option>
+                  <option value="negotiating">Em Negociação</option>
+                  <option value="accepted">Aceite</option>
+                  <option value="rejected">Rejeitada</option>
+                </select>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={!formData.title || createProposal.isPending}
+                    className="flex-1 py-2 bg-primary text-primary-foreground rounded-lg transition text-sm font-medium disabled:opacity-50"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="flex-1 py-2 bg-secondary text-foreground rounded-lg transition text-sm font-medium"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => renderMobileCard(row.original))
+            ) : (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Nenhuma proposta encontrada.
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Desktop: Table View */
+          <>
+            <div className="overflow-hidden rounded-md border border-border">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                <thead className="bg-muted/10 border-b border-border">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <th
+                            key={header.id}
+                            className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground whitespace-nowrap"
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </th>
+                        );
+                      })}
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={columns.length}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      Nenhuma proposta encontrada.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  ))}
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {isAdding && (
+                    <tr className="bg-primary/5">
+                      <td className="px-4 py-3">
+                        {/* Checkbox column - empty for new row */}
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="text"
+                          value={formData.title || ''}
+                          onChange={(e) => handleChange('title', e.target.value)}
+                          placeholder="Título da proposta"
+                          className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-muted-foreground text-sm">Selecionar no formulário</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={formData.status || 'draft'}
+                          onChange={(e) => handleChange('status', e.target.value)}
+                          className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        >
+                          <option value="draft">Rascunho</option>
+                          <option value="sent">Enviada</option>
+                          <option value="negotiating">Em Negociação</option>
+                          <option value="accepted">Aceite</option>
+                          <option value="rejected">Rejeitada</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.total_amount || ''}
+                          onChange={(e) => handleChange('total_amount', e.target.value ? parseFloat(e.target.value) : null)}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.total_margin || ''}
+                          onChange={(e) => handleChange('total_margin', e.target.value ? parseFloat(e.target.value) : null)}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="date"
+                          value={formData.valid_until ? new Date(formData.valid_until).toISOString().split('T')[0] : ''}
+                          onChange={(e) => handleChange('valid_until', e.target.value || null)}
+                          className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={handleSave}
+                            disabled={!formData.title || createProposal.isPending}
+                            className="p-2 hover:bg-primary/20 rounded-lg transition text-primary disabled:opacity-50"
+                            title="Guardar"
+                          >
+                            <Save className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={handleCancel}
+                            className="p-2 hover:bg-muted/10 rounded-lg transition text-muted-foreground hover:text-card-foreground"
+                            title="Cancelar"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <tr
+                        key={row.id}
+                        className="hover:bg-muted/5 transition"
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <td
+                            key={cell.id}
+                            className="px-4 py-3"
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={columns.length}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        Nenhuma proposta encontrada.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                </table>
+              </div>
+            </div>
 
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} proposta(s) encontrada(s).
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1.5 text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
-            >
-              Anterior
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1.5 text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
-            >
-              Próximo
-            </button>
-          </div>
-        </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+              <div className="text-xs md:text-sm text-muted-foreground">
+                {table.getFilteredRowModel().rows.length} proposta(s) encontrada(s).
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  className="px-3 py-1.5 text-xs md:text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="px-3 py-1.5 text-xs md:text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
+                >
+                  Próximo
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

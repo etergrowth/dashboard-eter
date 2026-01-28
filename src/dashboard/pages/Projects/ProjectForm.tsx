@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import { useCreateProject, useUpdateProject } from '../../hooks/useProjects';
 import { useClients } from '../../hooks/useClients';
+import { useIsMobile } from '../../../hooks/use-mobile';
 import type { ProjectInsert, Project } from '../../../types';
 
 interface ProjectFormProps {
@@ -13,6 +14,7 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const { data: clients } = useClients();
+  const isMobile = useIsMobile();
 
   const [formData, setFormData] = useState<Partial<ProjectInsert>>({
     name: project?.name || '',
@@ -56,11 +58,11 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-border rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4">
+      <div className={`bg-white border border-border ${isMobile ? 'max-w-full mx-0 rounded-t-3xl' : 'max-w-2xl rounded-2xl'} ${isMobile ? 'p-4' : 'p-6'} w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
-          <h2 className="text-2xl font-bold text-foreground">
+        <div className={`flex items-center justify-between ${isMobile ? 'mb-4 pb-3' : 'mb-6 pb-4'} border-b border-border`}>
+          <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-foreground`}>
             {project ? 'Editar Projeto' : 'Novo Projeto'}
           </h2>
           <button
@@ -129,7 +131,7 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Detalhes do Projeto</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Status
@@ -192,11 +194,11 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
           </div>
 
           {/* Submit */}
-          <div className="flex items-center gap-4 pt-4 border-t border-border">
+          <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-4'} pt-4 border-t border-border`}>
             <button
               type="submit"
               disabled={createProject.isPending || updateProject.isPending}
-              className="flex-1 bg-primary hover:bg-primary/90 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${isMobile ? 'w-full' : 'flex-1'} bg-primary hover:bg-primary/90 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {createProject.isPending || updateProject.isPending ? (
                 <>
@@ -213,7 +215,7 @@ export function ProjectForm({ onClose, project }: ProjectFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 rounded-xl font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition"
+              className={`${isMobile ? 'w-full' : 'px-6'} py-3 rounded-xl font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition`}
             >
               Cancelar
             </button>

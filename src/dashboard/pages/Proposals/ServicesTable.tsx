@@ -14,8 +14,11 @@ import {
 import { Plus, Edit, Trash2, Save, X, ArrowUpDown } from 'lucide-react';
 import { useAllServices, useCreateService, useUpdateService, useDeleteService } from '../../hooks/useServices';
 import type { Service, ServiceInsert } from '../../../types';
+import { useIsMobile } from '../../../hooks/use-mobile';
+import { MobileCard, MobileCardAction } from '../../components/MobileCard';
 
 export function ServicesTable() {
+  const isMobile = useIsMobile();
   const { data: services, isLoading } = useAllServices();
   const createService = useCreateService();
   const updateService = useUpdateService();
@@ -287,46 +290,158 @@ export function ServicesTable() {
     },
   });
 
+  // Mobile card render function
+  const renderMobileCard = (service: Service) => {
+    return (
+      <MobileCard
+        key={service.id}
+        title={service.name}
+        subtitle={service.description || undefined}
+        fields={[
+          {
+            label: 'Custo/Hora',
+            value: `${Math.round(Number(service.base_cost_per_hour))}€`,
+          },
+          {
+            label: 'Markup',
+            value: `${Math.round(Number(service.markup_percentage))}%`,
+          },
+          {
+            label: 'Preço/Hora',
+            value: `${Math.round(Number(service.final_hourly_rate))}€`,
+            highlight: true,
+          },
+        ]}
+        actions={
+          <div className="flex gap-2 w-full">
+            <MobileCardAction
+              icon={Edit}
+              label="Editar"
+              onClick={() => handleEdit(service)}
+              variant="primary"
+            />
+            <MobileCardAction
+              icon={Trash2}
+              label="Eliminar"
+              onClick={() => handleDelete(service.id, service.name)}
+              variant="danger"
+            />
+          </div>
+        }
+      />
+    );
+  };
+
   if (isLoading) {
     return (
-      <div className="glass-panel p-6 rounded-xl">
-        <p className="text-center text-muted-foreground">A carregar serviços...</p>
+      <div className="glass-panel p-4 md:p-6 rounded-xl">
+        <p className="text-center text-muted-foreground text-sm">A carregar serviços...</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-panel rounded-xl transition-all duration-300 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-card-foreground">
+    <div className="glass-panel rounded-xl transition-all duration-300 p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h2 className="text-base md:text-lg font-semibold text-card-foreground">
           Tabela de Serviços
         </h2>
         {!isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            className="glass-button px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-sm font-medium hover:bg-primary/10 transition-colors"
+            className="glass-button px-3 md:px-4 py-2 rounded-lg text-secondary-foreground flex items-center gap-2 text-xs md:text-sm font-medium hover:bg-primary/10 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Adicionar Serviço
+            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Adicionar Serviço</span>
+            <span className="sm:hidden">Adicionar</span>
           </button>
         )}
       </div>
 
       <div>
-        <div className="flex items-center py-4">
+        <div className="flex items-center py-3 md:py-4">
           <input
             placeholder="Filtrar serviços..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className="max-w-sm px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            className="w-full sm:max-w-sm px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           />
         </div>
 
-        <div className="overflow-hidden rounded-md border border-border">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        {/* Mobile: Cards View */}
+        {isMobile ? (
+          <div className="space-y-3">
+            {isAdding && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
+                <input
+                  type="text"
+                  value={formData.name || ''}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  placeholder="Nome do serviço"
+                  className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.base_cost_per_hour || 0}
+                    onChange={(e) => handleChange('base_cost_per_hour', parseFloat(e.target.value) || 0)}
+                    placeholder="Custo/Hora"
+                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.markup_percentage || 0}
+                    onChange={(e) => handleChange('markup_percentage', parseFloat(e.target.value) || 0)}
+                    placeholder="Markup %"
+                    className="w-full px-3 py-2 bg-muted/10 border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={!formData.name || createService.isPending}
+                    className="flex-1 py-2 bg-primary text-primary-foreground rounded-lg transition text-sm font-medium disabled:opacity-50"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="flex-1 py-2 bg-secondary text-foreground rounded-lg transition text-sm font-medium"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+            {table.getRowModel().rows?.length ? (
+              <>
+                {table.getRowModel().rows.map((row) => renderMobileCard(row.original))}
+                {services && services.length > 0 && (
+                  <div className="bg-muted/10 border border-border rounded-xl p-4 mt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-muted-foreground">Média Preço/Hora</span>
+                      <span className="text-sm font-bold text-card-foreground">
+                        {Math.round(averagePrice)}€
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Nenhum serviço encontrado.
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Desktop: Table View */
+          <div className="overflow-hidden rounded-md border border-border">
+            <div className="overflow-x-auto">
+              <table className="w-full">
               <thead className="bg-muted/10 border-b border-border">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
@@ -448,31 +563,34 @@ export function ServicesTable() {
                   </tr>
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} serviço(s) encontrado(s).
+        {!isMobile && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+            <div className="text-xs md:text-sm text-muted-foreground">
+              {table.getFilteredRowModel().rows.length} serviço(s) encontrado(s).
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="px-3 py-1.5 text-xs md:text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="px-3 py-1.5 text-xs md:text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
+              >
+                Próximo
+              </button>
+            </div>
           </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1.5 text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
-            >
-              Anterior
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1.5 text-sm bg-muted/10 border border-border rounded-lg hover:bg-muted/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-card-foreground"
-            >
-              Próximo
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

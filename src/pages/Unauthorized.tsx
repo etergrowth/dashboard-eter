@@ -1,13 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, LogOut } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Página exibida quando um utilizador tenta aceder com email não autorizado
  */
 export const Unauthorized = () => {
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -37,13 +43,23 @@ export const Unauthorized = () => {
             </p>
           </div>
 
-          <Button
-            onClick={() => navigate('/login')}
-            className="w-full"
-            variant="outline"
-          >
-            Voltar ao Login
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate('/login')}
+              className="flex-1"
+              variant="outline"
+            >
+              Voltar ao Login
+            </Button>
+            <Button
+              onClick={handleLogout}
+              className="flex-1"
+              variant="destructive"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Terminar Sessão
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,19 +1,29 @@
+import { supabase } from '../lib/supabase';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
 export async function getChatKitSessionToken(): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chatkit/sessions', {
+  // Get current session for auth header
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('User must be authenticated to use ChatKit');
+  }
+
+  // Call Edge Function instead of OpenAI directly (API key stays server-side)
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/openai-proxy`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'OpenAI-Beta': 'chatkit_beta=v1',
-      Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({
-      workflow: { id: import.meta.env.VITE_OPENAI_WORKFLOW_ID },
-      user: getOrCreateDeviceId(),
+      action: 'chatkit_session',
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create ChatKit session: ${response.statusText}`);
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(`Failed to create ChatKit session: ${error.error || response.statusText}`);
   }
 
   const { client_secret } = await response.json();

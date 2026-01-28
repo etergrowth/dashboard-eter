@@ -8,6 +8,7 @@ import { LeadCard } from '../../components/sandbox/LeadCard';
 import { QuickLogModal } from '../../components/sandbox/QuickLogModal';
 import { LeadForm } from '../../components/sandbox/LeadForm';
 import { useCreateSandboxLead } from '../../hooks/useSandboxLeads';
+import { useIsMobile } from '../../../hooks/use-mobile';
 import type { LeadSandbox, LeadSource, LeadStatus } from '../../../types/sandbox';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -21,6 +22,7 @@ export function LeadsQueue() {
   const { data: leads, isLoading } = useSandboxLeads();
   const createLead = useCreateSandboxLead();
   const updateLead = useUpdateSandboxLead();
+  const isMobile = useIsMobile();
   
   const [showForm, setShowForm] = useState(false);
   const [editingLead, setEditingLead] = useState<LeadSandbox | null>(null);
@@ -156,10 +158,10 @@ export function LeadsQueue() {
       {/* Filtros e Tabs */}
       <div className="bg-white p-4 rounded-2xl border border-border shadow-sm space-y-4">
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-border pb-2">
+        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'gap-2'} border-b border-border pb-2 overflow-x-auto`}>
           <button
             onClick={() => setSegment('all')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={`${isMobile ? 'w-full text-xs' : 'px-4 py-2 text-sm'} font-medium rounded-lg transition-all ${
               segment === 'all'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -169,24 +171,16 @@ export function LeadsQueue() {
           </button>
           <button
             onClick={() => setSegment('active_search')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
-              segment === 'active_search'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`${isMobile ? 'w-full text-xs' : 'px-4 py-2 text-sm'} font-medium rounded-lg transition-all flex items-center ${isMobile ? 'justify-center' : 'gap-2'}`}
           >
-            <Target size={16} />
-            Prospecção Ativa
+            <Target size={isMobile ? 14 : 16} />
+            {isMobile ? 'Prospecção' : 'Prospecção Ativa'}
           </button>
           <button
             onClick={() => setSegment('follow_up')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
-              segment === 'follow_up'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`${isMobile ? 'w-full text-xs' : 'px-4 py-2 text-sm'} font-medium rounded-lg transition-all flex items-center ${isMobile ? 'justify-center' : 'gap-2'}`}
           >
-            <Clock size={16} />
+            <Clock size={isMobile ? 14 : 16} />
             Follow-up
           </button>
         </div>
@@ -350,8 +344,8 @@ export function LeadsQueue() {
 
       {/* Modal New/Edit Lead */}
       {showForm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border shadow-2xl bg-white p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-0 md:p-4">
+          <div className={`relative w-full ${isMobile ? 'max-w-full mx-0 rounded-t-3xl' : 'max-w-2xl rounded-3xl'} max-h-[90vh] overflow-y-auto border border-border shadow-2xl bg-white ${isMobile ? 'p-4' : 'p-6'}`}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">
                 {editingLead ? 'Editar Lead' : 'Nova Lead'}

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Download, FileText, Calendar, Euro, Building2, Tag } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { MediaFile } from '@/types';
 import type { ReciboTransacao } from '@/types/finance';
 import type { TransacaoFinanceira } from '@/types/finance';
@@ -18,6 +19,7 @@ export function InvoiceDetailModal({ file, isOpen, onClose }: InvoiceDetailModal
   const [transacao, setTransacao] = useState<TransacaoFinanceira | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!isOpen || file.category !== 'invoice') return;
@@ -94,15 +96,15 @@ export function InvoiceDetailModal({ file, isOpen, onClose }: InvoiceDetailModal
   const isImage = file.file_type?.startsWith('image/');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-0 md:p-4" onClick={onClose}>
       <div
-        className="bg-background rounded-lg shadow-lg max-w-6xl w-full mx-4 max-h-[90vh] flex flex-col"
+        className={`bg-background shadow-lg ${isMobile ? 'max-w-full mx-0 rounded-t-3xl' : 'max-w-6xl rounded-lg mx-4'} w-full max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            {file.name}
+        <div className={`flex items-center justify-between ${isMobile ? 'p-3' : 'p-4'} border-b`}>
+          <h2 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold flex items-center gap-2 truncate`}>
+            <FileText className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+            <span className="truncate">{file.name}</span>
           </h2>
           <div className="flex items-center gap-2">
             {signedUrl && (
@@ -117,13 +119,13 @@ export function InvoiceDetailModal({ file, isOpen, onClose }: InvoiceDetailModal
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} ${isMobile ? 'gap-4' : 'gap-6'}`}>
               {/* Preview da Fatura */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase">Pré-visualização</h3>
@@ -132,14 +134,14 @@ export function InvoiceDetailModal({ file, isOpen, onClose }: InvoiceDetailModal
                     {isPDF ? (
                       <iframe
                         src={signedUrl}
-                        className="w-full h-[600px] border-0"
+                        className={`w-full ${isMobile ? 'h-[400px]' : 'h-[600px]'} border-0`}
                         title="PDF Preview"
                       />
                     ) : isImage ? (
                       <img
                         src={signedUrl}
                         alt={file.name}
-                        className="w-full h-auto max-h-[600px] object-contain"
+                        className={`w-full h-auto ${isMobile ? 'max-h-[400px]' : 'max-h-[600px]'} object-contain`}
                       />
                     ) : (
                       <div className="flex items-center justify-center h-64 text-muted-foreground">

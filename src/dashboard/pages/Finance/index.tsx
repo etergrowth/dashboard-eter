@@ -160,43 +160,49 @@ export function Finance() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">{TEXTS_PT.pageTitle}</h1>
-          <p className="text-muted-foreground mt-2">{TEXTS_PT.pageSubtitle}</p>
+          <h1 className="text-2xl md:text-3xl font-bold">{TEXTS_PT.pageTitle}</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">{TEXTS_PT.pageSubtitle}</p>
         </div>
         <Button
           onClick={() => navigate('/dashboard/finance/estatisticas')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-sm"
+          size="sm"
         >
-          <BarChart3 className="h-4 w-4" />
-          Estatísticas
+          <BarChart3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
+          <span className="hidden sm:inline">Estatísticas</span>
+          <span className="sm:hidden">Stats</span>
         </Button>
       </div>
 
       {/* Tabs para alternar entre AI e Manual */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-3 md:mb-4">
         <Button
           variant={inputMode === 'ai' ? 'default' : 'outline'}
           onClick={() => setInputMode('ai')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm flex-1 sm:flex-none"
+          size="sm"
         >
-          <Bot className="h-4 w-4" />
-          Modo AI
+          <Bot className="h-3.5 w-3.5 md:h-4 md:w-4" />
+          <span className="hidden sm:inline">Modo AI</span>
+          <span className="sm:hidden">AI</span>
         </Button>
         <Button
           variant={inputMode === 'manual' ? 'default' : 'outline'}
           onClick={() => setInputMode('manual')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm flex-1 sm:flex-none"
+          size="sm"
         >
-          <PenTool className="h-4 w-4" />
-          Modo Manual
+          <PenTool className="h-3.5 w-3.5 md:h-4 md:w-4" />
+          <span className="hidden sm:inline">Modo Manual</span>
+          <span className="sm:hidden">Manual</span>
         </Button>
       </div>
 
       {/* Layout principal: Input (AI ou Manual) | Upload+Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
         {/* Coluna esquerda: AI Chat ou Formulário Manual */}
         <div className="w-full">
           {inputMode === 'ai' ? (

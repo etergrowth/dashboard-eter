@@ -5,6 +5,40 @@ import type { ChatMessage, DadosExtraidosAI, ProcessTransactionResponse } from '
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
+// Helper to call OpenAI via Edge Function (keeps API key server-side)
+async function callOpenAIProxy(messages: Array<{role: string; content: any}>, options?: {
+  model?: string;
+  temperature?: number;
+  max_tokens?: number;
+}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Utilizador não autenticado');
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/openai-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({
+      action: 'chat',
+      messages,
+      model: options?.model || 'gpt-4o-mini',
+      temperature: options?.temperature ?? 0.7,
+      max_tokens: options?.max_tokens ?? 500,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || 'Erro ao chamar OpenAI API');
+  }
+
+  return response.json();
+}
+
 export function useFinanceAgent() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -35,12 +69,6 @@ export function useFinanceAgent() {
       // Adicionar mensagem do utilizador
       addMessage({ role: 'user', content: text });
 
-      // Usar OpenAI diretamente
-      const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!OPENAI_API_KEY) {
-        throw new Error('OPENAI_API_KEY não configurada');
-      }
-
       const today = new Date().toISOString().split('T')[0];
       const systemPrompt = `Você é um assistente financeiro que fala português de Portugal. Extraia informações de transações financeiras.
 
@@ -60,28 +88,12 @@ Categorias: software_saas, viagens, refeicoes, material_escritorio, receitas, su
 
 Data atual: ${today}`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: text }
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-      });
+      // Call OpenAI via Edge Function (API key stays server-side)
+      const data = await callOpenAIProxy([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
+      ]);
 
-      if (!response.ok) {
-        throw new Error('Erro ao chamar OpenAI API');
-      }
-
-      const data = await response.json();
       const aiResponse = data.choices[0]?.message?.content || '';
 
       // Parse JSON da resposta
@@ -119,12 +131,6 @@ Data atual: ${today}`;
     setIsProcessing(true);
 
     try {
-      // Usar OpenAI Vision
-      const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!OPENAI_API_KEY) {
-        throw new Error('OPENAI_API_KEY não configurada');
-      }
-
       const today = new Date().toISOString().split('T')[0];
       const systemPrompt = `Você é um assistente financeiro que fala português de Portugal. Extraia informações de faturas/recibos.
 
@@ -144,42 +150,26 @@ Categorias: software_saas, viagens, refeicoes, material_escritorio, receitas, su
 
 Data atual: ${today}`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
+      // Call OpenAI Vision via Edge Function (API key stays server-side)
+      const data = await callOpenAIProxy([
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: [
             {
-              role: 'user',
-              content: [
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:${mimeType};base64,${imageBase64}`
-                  }
-                },
-                {
-                  type: 'text',
-                  text: 'Extraia os detalhes desta fatura/recibo.'
-                }
-              ]
+              type: 'image_url',
+              image_url: {
+                url: `data:${mimeType};base64,${imageBase64}`
+              }
+            },
+            {
+              type: 'text',
+              text: 'Extraia os detalhes desta fatura/recibo.'
             }
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-      });
+          ]
+        }
+      ]);
 
-      if (!response.ok) {
-        throw new Error('Erro ao chamar OpenAI API');
-      }
-
-      const data = await response.json();
       const aiResponse = data.choices[0]?.message?.content || '';
 
       // Parse JSON da resposta

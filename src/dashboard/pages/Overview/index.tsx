@@ -64,7 +64,9 @@ export function Overview() {
       ) : (
         <>
           <StatsGrid stats={stats} columns={4} />
-          <ProposalsChart />
+          <div className="w-full max-w-full overflow-hidden">
+            <ProposalsChart />
+          </div>
         </>
       )}
     </motion.div>

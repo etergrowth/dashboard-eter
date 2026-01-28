@@ -14,7 +14,7 @@ import { getRedirectUrl } from '@/lib/url-helper';
  * Layout de uma coluna no mobile (apenas formulário)
  */
 export const Login = () => {
-  const { isAuthenticated, signInWithGoogle, isLoading } = useAuth();
+  const { isAuthenticated, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,21 +66,8 @@ export const Login = () => {
 
       if (signInError) throw signInError;
 
-      // Verificar se email está autorizado
-      if (data.user?.email) {
-        const allowedEmails = [
-          'geral@etergrowth.com',
-          'rivdrgc@gmail.com',
-          'luisvaldorio@gmail.com',
-        ];
-        
-        if (!allowedEmails.includes(data.user.email.toLowerCase())) {
-          await supabase.auth.signOut();
-          setError('Email não autorizado. Apenas membros da equipa Eter podem aceder.');
-          setIsLoadingEmailPassword(false);
-          return;
-        }
-      }
+      // A verificação de email autorizado é feita pelo useAuth hook
+      // Se o email não for autorizado, o utilizador será redirecionado para /unauthorized
 
       // Redirecionar para a rota pretendida ou dashboard
       const returnTo = sessionStorage.getItem('returnTo');
@@ -107,17 +94,8 @@ export const Login = () => {
       return;
     }
 
-    // Verificar se email está autorizado
-    const allowedEmails = [
-      'geral@etergrowth.com',
-      'rivdrgc@gmail.com',
-      'luisvaldorio@gmail.com',
-    ];
-    
-    if (!allowedEmails.includes(email.toLowerCase())) {
-      setError('Email não autorizado. Apenas membros da equipa Eter podem solicitar reset de password.');
-      return;
-    }
+    // A verificação de email autorizado será feita pelo Supabase
+    // Se o email não existir na DB, simplesmente não receberá o email
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
@@ -137,14 +115,6 @@ export const Login = () => {
       );
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen">

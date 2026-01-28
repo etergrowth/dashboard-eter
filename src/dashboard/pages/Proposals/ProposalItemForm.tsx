@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import { useCreateProposalItem, useUpdateProposalItem } from '../../hooks/useProposals';
 import { useServices } from '../../hooks/useServices';
+import { useIsMobile } from '../../../hooks/use-mobile';
 import type { ProposalItemInsert, ProposalItem, Service } from '../../../types';
 
 interface ProposalItemFormProps {
@@ -15,6 +16,7 @@ export function ProposalItemForm({ onClose, proposalId, item, position }: Propos
   const createItem = useCreateProposalItem();
   const updateItem = useUpdateProposalItem();
   const { data: services } = useServices();
+  const isMobile = useIsMobile();
   
   const [formData, setFormData] = useState<Partial<ProposalItemInsert>>({
     service_id: item?.service_id || '',
@@ -96,10 +98,10 @@ export function ProposalItemForm({ onClose, proposalId, item, position }: Propos
   const isLoading = createItem.isPending || updateItem.isPending;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0 md:p-4">
+      <div className={`bg-gray-900 shadow-xl w-full ${isMobile ? 'max-w-full mx-0 rounded-t-3xl' : 'max-w-3xl rounded-lg'} max-h-[90vh] overflow-y-auto`}>
+        <div className={`sticky top-0 bg-gray-900 border-b border-gray-800 ${isMobile ? 'p-4' : 'p-6'} flex items-center justify-between`}>
+          <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-white`}>
             {item ? 'Editar Item' : 'Adicionar Item à Proposta'}
           </h2>
           <button
@@ -110,7 +112,7 @@ export function ProposalItemForm({ onClose, proposalId, item, position }: Propos
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className={`${isMobile ? 'p-4 space-y-3' : 'p-6 space-y-4'}`}>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Serviço *
@@ -137,7 +139,7 @@ export function ProposalItemForm({ onClose, proposalId, item, position }: Propos
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-4`}>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Horas Estimadas *
@@ -192,7 +194,7 @@ export function ProposalItemForm({ onClose, proposalId, item, position }: Propos
           {/* Calculated values preview */}
           <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
             <h3 className="text-sm font-medium text-gray-300 mb-3">Cálculos Automáticos</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 text-sm`}>
               <div>
                 <span className="text-gray-400">Custo Total Estimado:</span>
                 <span className="ml-2 text-white font-semibold">
@@ -225,18 +227,18 @@ export function ProposalItemForm({ onClose, proposalId, item, position }: Propos
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+          <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-end gap-3'} pt-4 border-t border-gray-800`}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              className={`${isMobile ? 'w-full' : ''} px-4 py-2 text-gray-400 hover:text-white transition-colors`}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`${isMobile ? 'w-full' : ''} px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
             >
               {isLoading ? (
                 <>

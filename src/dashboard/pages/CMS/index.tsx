@@ -3,12 +3,14 @@ import { Upload, Folder, FileText, Trash2, Download, Link as LinkIcon, Loader2, 
 import { useMediaFiles, useUploadFile, useDeleteFile } from '../../hooks/useMediaFiles';
 import { PageHeader, StatsGrid, ActionButton, LoadingState, EmptyState } from '../../components/sections';
 import { InvoiceDetailModal } from './components/InvoiceDetailModal';
+import { useIsMobile } from '../../../hooks/use-mobile';
 import type { MediaFile } from '@/types';
 
 export function CMS() {
   const { data: mediaFiles, isLoading } = useMediaFiles();
   const uploadFile = useUploadFile();
   const deleteFile = useDeleteFile();
+  const isMobile = useIsMobile();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -166,18 +168,18 @@ export function CMS() {
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`glass-panel p-12 rounded-xl border-2 border-dashed ${
+        className={`glass-panel ${isMobile ? 'p-6' : 'p-12'} rounded-xl border-2 border-dashed ${
           dragActive ? 'border-primary bg-primary/10' : 'border-border'
         } text-center hover:border-primary/50 transition cursor-pointer`}
       >
-        <Upload className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-card-foreground mb-2">
+        <Upload className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-muted-foreground mx-auto mb-4`} />
+        <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-card-foreground mb-2`}>
           Arraste ficheiros para aqui
         </h3>
-        <p className="text-muted-foreground mb-4">
+        <p className={`${isMobile ? 'text-sm' : ''} text-muted-foreground mb-4`}>
           ou clique para selecionar ficheiros do seu computador
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
           Suporta: JPG, PNG, GIF, PDF, DOC, XLS (máx. 50MB)
         </p>
       </div>

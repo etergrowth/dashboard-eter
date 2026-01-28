@@ -298,25 +298,25 @@ export function CRM() {
       <StatsGrid stats={stats} columns={4} />
 
       {/* Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:gap-4 justify-between items-stretch md:items-center bg-white p-3 md:p-4 rounded-2xl border border-border shadow-sm">
         <div className="relative w-full md:w-96 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
           <input
             type="text"
-            placeholder="Pesquisar por nome, empresa ou email..."
+            placeholder="Pesquisar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-secondary border border-border text-foreground pl-12 pr-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full bg-secondary border border-border text-foreground pl-12 pr-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full md:w-auto">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-secondary border border-border text-foreground px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
+            className="flex-1 md:flex-none bg-secondary border border-border text-foreground px-3 md:px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
           >
-            <option value="all">Todos os Status</option>
+            <option value="all">Todos</option>
             <option value="lead">Lead</option>
             <option value="proposal">Proposta</option>
             <option value="negotiation">Negociação</option>
@@ -403,17 +403,18 @@ export function CRM() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+            <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-start overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory md:snap-none -mx-4 px-4 md:mx-0 md:px-0">
               {kanbanColumns.map((col) => (
-                <DroppableColumn
-                  key={col.id}
-                  id={col.id}
-                  title={col.title}
-                  color={col.color}
-                  clients={filteredClients.filter(c => c.status === col.id)}
-                  onNavigate={navigate}
-                  onDelete={handleDelete}
-                />
+                <div key={col.id} className="min-w-[280px] md:min-w-0 snap-center md:snap-align-none">
+                  <DroppableColumn
+                    id={col.id}
+                    title={col.title}
+                    color={col.color}
+                    clients={filteredClients.filter(c => c.status === col.id)}
+                    onNavigate={navigate}
+                    onDelete={handleDelete}
+                  />
+                </div>
               ))}
             </div>
 

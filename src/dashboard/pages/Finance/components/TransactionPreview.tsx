@@ -76,15 +76,15 @@ export function TransactionPreview({ draft, onConfirm, onDiscard }: TransactionP
 
   return (
     <Card>
-      <CardHeader className="relative">
+      <CardHeader className="relative p-4 md:p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{TEXTS_PT.previewTitle}</CardTitle>
-          <Badge variant="outline" className={isEdited ? 'bg-yellow-500/10 text-yellow-600' : 'bg-primary/10 text-primary'}>
+          <CardTitle className="text-base md:text-lg">{TEXTS_PT.previewTitle}</CardTitle>
+          <Badge variant="outline" className={`text-xs ${isEdited ? 'bg-yellow-500/10 text-yellow-600' : 'bg-primary/10 text-primary'}`}>
             {isEdited ? TEXTS_PT.previewBadgeEdited : TEXTS_PT.previewBadgeAI}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
         {/* Data */}
         <div className="space-y-2">
           <Label htmlFor="data">{TEXTS_PT.previewDateLabel}</Label>
@@ -164,11 +164,11 @@ export function TransactionPreview({ draft, onConfirm, onDiscard }: TransactionP
         </div>
 
         {/* Botões de ação */}
-        <div className="flex gap-2 pt-4">
-          <Button onClick={handleConfirm} className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-2 pt-2 md:pt-4">
+          <Button onClick={handleConfirm} className="flex-1 text-sm" size="sm">
             {TEXTS_PT.confirmButton}
           </Button>
-          <Button variant="ghost" onClick={onDiscard}>
+          <Button variant="ghost" onClick={onDiscard} className="text-sm" size="sm">
             {TEXTS_PT.discardButton}
           </Button>
         </div>

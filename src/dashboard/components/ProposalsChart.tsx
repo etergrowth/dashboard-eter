@@ -209,8 +209,8 @@ export function ProposalsChart() {
       </div>
 
       {/* Chart */}
-      <div className="p-6">
-        <ResponsiveContainer width="100%" height={300}>
+      <div className="p-4 md:p-6">
+        <ResponsiveContainer width="100%" height={250}>
           <LineChart
             data={chartData}
             margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
@@ -223,7 +223,10 @@ export function ProposalsChart() {
               tickMargin={8}
               tickFormatter={formatDate}
               stroke="hsl(var(--muted-foreground))"
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '10px' }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
             <Tooltip
               contentStyle={{

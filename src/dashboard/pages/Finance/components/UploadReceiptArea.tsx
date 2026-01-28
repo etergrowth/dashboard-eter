@@ -76,14 +76,14 @@ export function UploadReceiptArea({ onFileUploaded }: UploadReceiptAreaProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{TEXTS_PT.uploadTitle}</CardTitle>
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="text-base md:text-lg">{TEXTS_PT.uploadTitle}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 md:p-6">
         <div
           {...getRootProps()}
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+            border-2 border-dashed rounded-lg p-4 md:p-8 text-center cursor-pointer
             transition-colors duration-200
             ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300'}
             ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50'}
@@ -91,22 +91,22 @@ export function UploadReceiptArea({ onFileUploaded }: UploadReceiptAreaProps) {
         >
           <input {...getInputProps()} />
 
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 md:gap-2">
             {isLoading ? (
               <>
-                <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                <p className="text-sm text-gray-600 mt-2">
+                <Loader2 className="h-8 w-8 md:h-12 md:w-12 text-primary animate-spin" />
+                <p className="text-xs md:text-sm text-gray-600 mt-1 md:mt-2">
                   {uploading ? TEXTS_PT.uploadProcessing : 'A processar recibo com AI...'}
                 </p>
               </>
             ) : (
               <>
-                <Upload className="h-12 w-12 text-gray-400" />
-                <h3 className="font-semibold text-lg">{TEXTS_PT.uploadTitle}</h3>
-                <p className="text-sm text-gray-600">
+                <Upload className="h-8 w-8 md:h-12 md:w-12 text-gray-400" />
+                <h3 className="font-semibold text-sm md:text-lg">{TEXTS_PT.uploadTitle}</h3>
+                <p className="text-xs md:text-sm text-gray-600">
                   {isDragActive ? TEXTS_PT.uploadDragActive : TEXTS_PT.uploadSubtitle}
                 </p>
-                <p className="text-xs text-gray-500">{TEXTS_PT.uploadMaxSize}</p>
+                <p className="text-[10px] md:text-xs text-gray-500">{TEXTS_PT.uploadMaxSize}</p>
               </>
             )}
           </div>
