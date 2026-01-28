@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, Plus, Trash2, Edit, Calendar, DollarSign, Eye } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Edit, Calendar, DollarSign, Eye, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { useProjects, useDeleteProject } from '../../hooks/useProjects';
 import { ProjectForm } from './ProjectForm';
 import { KanbanBoard } from './KanbanBoard';
@@ -12,6 +12,7 @@ export function Projects() {
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'cards'>('cards');
 
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Tem a certeza que deseja eliminar "${name}"?`)) {
@@ -91,11 +92,27 @@ export function Projects() {
         title="Projetos"
         description="Gestão de projetos e tarefas"
         action={
-          <ActionButton
-            label="Novo Projeto"
-            onClick={() => setShowForm(true)}
-            icon={Plus}
-          />
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1 bg-secondary rounded-xl p-1 border border-border">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <LayoutGrid size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <ListIcon size={18} />
+              </button>
+            </div>
+            <ActionButton
+              label="Novo Projeto"
+              onClick={() => setShowForm(true)}
+              icon={Plus}
+            />
+          </div>
         }
       />
 
@@ -106,70 +123,140 @@ export function Projects() {
         <LoadingState message="A carregar projetos..." />
       ) : projects && projects.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
-              <div key={project.id} className="bg-white border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-1">{project.name}</h3>
-                    {project.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-                    )}
+          {viewMode === 'list' ? (
+            /* List View */
+            <div className="bg-white rounded-2xl overflow-hidden border border-border">
+              <table className="w-full">
+                <thead className="bg-secondary border-b border-border">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Projeto</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Budget</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Deadline</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {projects.map((project) => (
+                    <tr key={project.id} className="hover:bg-secondary/50 transition">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-foreground">{project.name}</p>
+                          {project.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-1">{project.description}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(project.status)}`}>
+                          {getStatusLabel(project.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-foreground">
+                        {project.budget
+                          ? Number(project.budget).toLocaleString('pt-PT', { minimumFractionDigits: 2, style: 'currency', currency: 'EUR' })
+                          : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {project.end_date ? new Date(project.end_date).toLocaleDateString('pt-PT') : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setSelectedProject(project)}
+                            className="p-2 hover:bg-primary/10 rounded-lg transition text-primary"
+                            title="Ver Kanban"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(project)}
+                            className="p-2 hover:bg-secondary rounded-lg transition text-muted-foreground hover:text-foreground"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(project.id, project.name)}
+                            className="p-2 hover:bg-red-50 rounded-lg transition text-muted-foreground hover:text-red-600"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Cards View */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((project) => (
+                <div key={project.id} className="bg-white border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-foreground mb-1">{project.name}</h3>
+                      {project.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(project.status)}`}
-                    >
-                      {getStatusLabel(project.status)}
-                    </span>
-                  </div>
-
-                  {project.budget && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="font-medium text-foreground">
-                        {Number(project.budget).toLocaleString('pt-PT', { minimumFractionDigits: 2, style: 'currency', currency: 'EUR' })}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(project.status)}`}
+                      >
+                        {getStatusLabel(project.status)}
                       </span>
                     </div>
-                  )}
 
-                  {project.end_date && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4 text-primary" />
-                      <span>{new Date(project.end_date).toLocaleDateString('pt-PT')}</span>
-                    </div>
-                  )}
-                </div>
+                    {project.budget && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <span className="font-medium text-foreground">
+                          {Number(project.budget).toLocaleString('pt-PT', { minimumFractionDigits: 2, style: 'currency', currency: 'EUR' })}
+                        </span>
+                      </div>
+                    )}
 
-                <div className="flex items-center gap-2 pt-4 border-t border-border">
-                  <button
-                    onClick={() => setSelectedProject(project)}
-                    className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 rounded-xl transition text-white text-sm font-semibold flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Ver Kanban
-                  </button>
-                  <button
-                    onClick={() => handleEdit(project)}
-                    className="p-2.5 hover:bg-secondary rounded-xl transition text-muted-foreground hover:text-foreground"
-                    title="Editar"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(project.id, project.name)}
-                    className="p-2.5 hover:bg-red-50 rounded-xl transition text-muted-foreground hover:text-red-600"
-                    title="Eliminar"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                    {project.end_date && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 text-primary" />
+                        <span>{new Date(project.end_date).toLocaleDateString('pt-PT')}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-4 border-t border-border">
+                    <button
+                      onClick={() => setSelectedProject(project)}
+                      className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 rounded-xl transition text-white text-sm font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Ver Kanban
+                    </button>
+                    <button
+                      onClick={() => handleEdit(project)}
+                      className="p-2.5 hover:bg-secondary rounded-xl transition text-muted-foreground hover:text-foreground"
+                      title="Editar"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(project.id, project.name)}
+                      className="p-2.5 hover:bg-red-50 rounded-xl transition text-muted-foreground hover:text-red-600"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Kanban Board for Selected Project */}
           {selectedProject && (

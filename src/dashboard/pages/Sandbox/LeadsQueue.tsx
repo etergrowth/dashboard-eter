@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Target, Clock } from 'lucide-react';
+import { Plus, Search, Target, Clock, LayoutGrid, List, Edit } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PageHeader, ActionButton, EmptyState, LoadingState } from '../../components/sections';
 import { useSandboxLeads, useUpdateSandboxLead } from '../../hooks/useSandboxLeads';
@@ -9,9 +9,12 @@ import { QuickLogModal } from '../../components/sandbox/QuickLogModal';
 import { LeadForm } from '../../components/sandbox/LeadForm';
 import { useCreateSandboxLead } from '../../hooks/useSandboxLeads';
 import type { LeadSandbox, LeadSource, LeadStatus } from '../../../types/sandbox';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
 
 type Segment = 'active_search' | 'follow_up' | 'all';
 type SourceFilter = LeadSource | 'all';
+type ViewMode = 'cards' | 'list';
 
 export function LeadsQueue() {
   const navigate = useNavigate();
@@ -20,10 +23,12 @@ export function LeadsQueue() {
   const updateLead = useUpdateSandboxLead();
   
   const [showForm, setShowForm] = useState(false);
+  const [editingLead, setEditingLead] = useState<LeadSandbox | null>(null);
   const [quickLogLead, setQuickLogLead] = useState<LeadSandbox | null>(null);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [segment, setSegment] = useState<Segment>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
@@ -82,6 +87,23 @@ export function LeadsQueue() {
   const handleCreateLead = async (leadData: any) => {
     await createLead.mutateAsync(leadData);
     setShowForm(false);
+    setEditingLead(null);
+  };
+
+  const handleEditLead = (lead: LeadSandbox) => {
+    setEditingLead(lead);
+    setShowForm(true);
+  };
+
+  const handleUpdateLead = async (leadData: any) => {
+    if (!editingLead) return;
+    
+    await updateLead.mutateAsync({
+      id: editingLead.id,
+      ...leadData,
+    });
+    setShowForm(false);
+    setEditingLead(null);
   };
 
   const sources: { value: SourceFilter; label: string }[] = [
@@ -105,11 +127,29 @@ export function LeadsQueue() {
         title="Fila de Leads"
         description="Gerir leads em fase de prospecção ativa"
         action={
-          <ActionButton
-            label="Nova Lead"
-            onClick={() => setShowForm(true)}
-            icon={Plus}
-          />
+          <div className="flex gap-3">
+            <div className="flex bg-secondary p-1 rounded-xl border border-border">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+                title="Vista em Cards"
+              >
+                <LayoutGrid size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+                title="Vista em Lista"
+              >
+                <List size={18} />
+              </button>
+            </div>
+            <ActionButton
+              label="Nova Lead"
+              onClick={() => setShowForm(true)}
+              icon={Plus}
+            />
+          </div>
         }
       />
 
@@ -182,17 +222,102 @@ export function LeadsQueue() {
       {isLoading ? (
         <LoadingState message="A carregar leads..." />
       ) : filteredLeads && filteredLeads.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLeads.map((lead) => (
-            <LeadCard
-              key={lead.id}
-              lead={lead}
-              onQuickLog={handleQuickLog}
-              onValidate={handleValidate}
-              onNavigate={(id) => navigate(`/dashboard/sandbox/${id}`)}
-            />
-          ))}
-        </div>
+        viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredLeads.map((lead) => (
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                onQuickLog={handleQuickLog}
+                onValidate={handleValidate}
+                onEdit={handleEditLead}
+                onNavigate={(id) => navigate(`/dashboard/sandbox/${id}`)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-secondary/50 border-b border-border">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-foreground">Nome</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-foreground">Empresa</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-foreground hidden md:table-cell">Fonte</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-foreground hidden lg:table-cell">Último Contacto</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-foreground hidden lg:table-cell">Status</th>
+                  <th className="text-right px-4 py-3 text-sm font-semibold text-foreground">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredLeads.map((lead) => (
+                  <tr
+                    key={lead.id}
+                    className="hover:bg-secondary/30 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/dashboard/sandbox/${lead.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <span className="font-medium text-foreground">{lead.name}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-muted-foreground">{lead.company}</span>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-secondary text-foreground">
+                        {sources.find(s => s.value === lead.source)?.label || lead.source}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">
+                      {lead.date_last_contact
+                        ? format(new Date(lead.date_last_contact), "d MMM yyyy", { locale: pt })
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                        lead.status === 'qualified' ? 'bg-green-100 text-green-700' :
+                        lead.status === 'crm_ready' ? 'bg-blue-100 text-blue-700' :
+                        lead.status === 'dead' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {lead.status === 'new' && 'Novo'}
+                        {lead.status === 'contacted' && 'Contactado'}
+                        {lead.status === 'qualified' && 'Qualificado'}
+                        {lead.status === 'crm_ready' && 'Pronto CRM'}
+                        {lead.status === 'dead' && 'Perdido'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleEditLead(lead)}
+                          className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Editar Lead"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleQuickLog(lead)}
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                          title="Registar Atividade"
+                        >
+                          <Clock size={16} />
+                        </button>
+                        {lead.status !== 'qualified' && lead.status !== 'crm_ready' && (
+                          <button
+                            onClick={() => handleValidate(lead.id)}
+                            className="p-2 text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Validar Lead"
+                          >
+                            <Target size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       ) : (
         <EmptyState
           icon={Target}
@@ -223,23 +348,43 @@ export function LeadsQueue() {
         />
       )}
 
-      {/* Modal New Lead */}
+      {/* Modal New/Edit Lead */}
       {showForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border shadow-2xl bg-white p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Nova Lead</h2>
+              <h2 className="text-2xl font-bold">
+                {editingLead ? 'Editar Lead' : 'Nova Lead'}
+              </h2>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingLead(null);
+                }}
                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
               >
                 <Plus className="w-5 h-5 rotate-45" />
               </button>
             </div>
             <LeadForm
-              onSubmit={handleCreateLead}
-              onCancel={() => setShowForm(false)}
-              isLoading={createLead.isPending}
+              onSubmit={editingLead ? handleUpdateLead : handleCreateLead}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingLead(null);
+              }}
+              initialData={editingLead ? {
+                name: editingLead.name,
+                email: editingLead.email,
+                phone: editingLead.phone,
+                linkedin_url: editingLead.linkedin_url,
+                location: editingLead.location,
+                company: editingLead.company,
+                job_title: editingLead.job_title,
+                company_size: editingLead.company_size,
+                source: editingLead.source,
+                status: editingLead.status,
+              } : undefined}
+              isLoading={editingLead ? updateLead.isPending : createLead.isPending}
             />
           </div>
         </div>

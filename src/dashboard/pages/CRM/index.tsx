@@ -63,12 +63,7 @@ function DraggableCard({ client, onNavigate, onDelete, isDragging = false }: Dra
       className={`bg-white p-5 rounded-xl border border-border hover:border-primary/30 hover:shadow-lg transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden ${isDragging ? 'shadow-2xl rotate-2' : 'shadow-sm'}`}
     >
       <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center text-xs font-bold text-foreground">
-            {client.name.charAt(0)}
-          </div>
-          <h4 className="font-bold text-foreground text-sm truncate max-w-[120px]">{client.name}</h4>
-        </div>
+        <h4 className="font-bold text-foreground text-sm truncate max-w-[150px]">{client.name}</h4>
         <span className="text-[10px] font-bold text-gray-500">{client.ai_score || 0} pts</span>
       </div>
 
@@ -352,14 +347,9 @@ export function CRM() {
                   {filteredClients.map((client) => (
                     <tr key={client.id} className="hover:bg-secondary transition group">
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
-                            {client.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground text-sm">{client.name}</p>
-                            <p className="text-xs text-gray-500">{client.company || 'Pessoa Singular'}</p>
-                          </div>
+                        <div>
+                          <p className="font-bold text-foreground text-sm">{client.name}</p>
+                          <p className="text-xs text-gray-500">{client.company || 'Pessoa Singular'}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">

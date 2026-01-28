@@ -13,6 +13,7 @@
  */
 
 import { getEmailNovaLead, getEmailRejeicao, getEmailConfirmacao, type EmailTemplateData } from './templates';
+import emailApresentacaoHtml from '../../../emails_html/email_potencial_cliente.html?raw';
 
 export interface GmailConfig {
   clientId: string;
@@ -124,23 +125,33 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
     // Verificar se está configurado
     if (!config.clientId || !config.clientSecret || !config.refreshToken) {
-      console.error('[Gmail] Configuração incompleta. Email NÃO será enviado.');
+      const errorMsg = '[Gmail] Configuração incompleta. Email NÃO será enviado.';
+      console.error(errorMsg);
       
       // Em desenvolvimento, logar o email em vez de enviar
       if (import.meta.env.DEV) {
-        console.log('📧 [DEV MODE] Email que seria enviado:', {
+        console.warn('📧 [DEV MODE] Email que seria enviado:', {
           to: options.to,
           subject: options.subject,
           htmlLength: options.html.length,
         });
-        return true; // Simular sucesso em DEV
+        console.warn('⚠️ [DEV MODE] Em produção, este email seria enviado. Em DEV, simula sucesso.');
+        // Em DEV, retornar false para forçar configuração correta
+        // Mas pode mudar para true se quiser simular sucesso em desenvolvimento
+        return false; // Forçar configuração correta mesmo em DEV
       }
       
-      return false;
+      throw new Error('Configuração do Gmail incompleta. Verifique as variáveis de ambiente.');
     }
 
     // Obter access token
-    const accessToken = await getAccessToken(config);
+    let accessToken: string;
+    try {
+      accessToken = await getAccessToken(config);
+    } catch (tokenError) {
+      console.error('❌ Erro ao obter access token:', tokenError);
+      throw new Error(`Falha na autenticação Gmail: ${tokenError instanceof Error ? tokenError.message : 'Erro desconhecido'}`);
+    }
 
     // Criar mensagem MIME
     const encodedMessage = createMimeMessage(options, config);
@@ -158,16 +169,34 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Erro ao enviar email: ${error}`);
+      const errorText = await response.text();
+      let errorMessage = `Erro ao enviar email (${response.status})`;
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error?.message || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      
+      console.error('❌ Erro da Gmail API:', errorMessage);
+      throw new Error(errorMessage);
     }
 
-    console.log('✅ Email enviado com sucesso para:', options.to);
-    return true;
+    // Verificar resposta
+    const responseData = await response.json();
+    if (responseData.id) {
+      console.log('✅ Email enviado com sucesso para:', options.to);
+      console.log('📧 ID da mensagem:', responseData.id);
+      return true;
+    } else {
+      throw new Error('Resposta inesperada da Gmail API');
+    }
 
   } catch (error) {
     console.error('❌ Erro ao enviar email:', error);
-    return false;
+    // Re-lançar o erro para que o chamador possa tratá-lo
+    throw error;
   }
 }
 
@@ -226,4 +255,52 @@ export async function sendEmailConfirmacao(
 export function isGmailConfigured(): boolean {
   const config = getGmailConfig();
   return !!(config.clientId && config.clientSecret && config.refreshToken);
+}
+
+/**
+ * Obter HTML do email de apresentação com nome personalizado
+ */
+export function getEmailApresentacaoHtml(leadName: string): string {
+  // Substituir "Olá," por "Olá [Nome],"
+  return emailApresentacaoHtml.replace(
+    '<p class="greeting">Olá,</p>',
+    `<p class="greeting">Olá ${leadName},</p>`
+  );
+}
+
+/**
+ * Enviar email de apresentação para um lead
+ */
+export async function sendEmailApresentacao(
+  leadName: string,
+  leadEmail: string
+): Promise<boolean> {
+  // Validar inputs
+  if (!leadName || !leadName.trim()) {
+    throw new Error('Nome do lead é obrigatório');
+  }
+  
+  if (!leadEmail || !leadEmail.trim()) {
+    throw new Error('Email do lead é obrigatório');
+  }
+
+  // Validar formato de email básico
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(leadEmail)) {
+    throw new Error('Email inválido');
+  }
+
+  const html = getEmailApresentacaoHtml(leadName.trim());
+
+  try {
+    const result = await sendEmail({
+      to: leadEmail.trim(),
+      subject: 'Apresentação Eter Growth',
+      html,
+    });
+    return result;
+  } catch (error) {
+    // Re-lançar o erro para tratamento no componente
+    throw error;
+  }
 }

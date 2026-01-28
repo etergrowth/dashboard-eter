@@ -11,7 +11,9 @@ import {
     Phone,
     Sparkles,
     Loader2,
-    MessageSquare
+    MessageSquare,
+    MoreVertical,
+    Edit2
 } from 'lucide-react';
 import { useClients, useUpdateClient, useDeleteClient } from '../../hooks/useClients';
 import { supabase } from '../../../lib/supabase';
@@ -29,6 +31,8 @@ export function LeadDetails() {
     const [loadingInteractions, setLoadingInteractions] = useState(true);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [showInteractionModal, setShowInteractionModal] = useState(false);
+    const [editingInteraction, setEditingInteraction] = useState<any>(null);
+    const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [newInteraction, setNewInteraction] = useState({
         title: '',
         description: '',
@@ -111,6 +115,7 @@ export function LeadDetails() {
             alert('Erro ao adicionar interação');
         } else {
             setShowInteractionModal(false);
+            setEditingInteraction(null);
             setNewInteraction({
                 title: '',
                 description: '',
@@ -120,6 +125,65 @@ export function LeadDetails() {
             });
             fetchInteractions();
         }
+    };
+
+    const handleEditInteraction = (interaction: any) => {
+        setEditingInteraction(interaction);
+        setNewInteraction({
+            title: interaction.title,
+            description: interaction.description || '',
+            location: interaction.location || '',
+            type: interaction.type,
+            date: interaction.date.split('T')[0]
+        });
+        setShowInteractionModal(true);
+        setActiveMenu(null);
+    };
+
+    const handleUpdateInteraction = async () => {
+        if (!editingInteraction || !newInteraction.title) return;
+
+        const { error } = await supabase
+            .from('interactions')
+            .update({
+                title: newInteraction.title,
+                description: newInteraction.description,
+                location: newInteraction.location,
+                type: newInteraction.type,
+                date: newInteraction.date
+            })
+            .eq('id', editingInteraction.id);
+
+        if (error) {
+            alert('Erro ao atualizar interação');
+        } else {
+            setShowInteractionModal(false);
+            setEditingInteraction(null);
+            setNewInteraction({
+                title: '',
+                description: '',
+                location: '',
+                type: 'note',
+                date: new Date().toISOString().split('T')[0]
+            });
+            fetchInteractions();
+        }
+    };
+
+    const handleDeleteInteraction = async (interactionId: string) => {
+        if (!window.confirm('Tem a certeza que deseja eliminar esta interação?')) return;
+
+        const { error } = await supabase
+            .from('interactions')
+            .delete()
+            .eq('id', interactionId);
+
+        if (error) {
+            alert('Erro ao eliminar interação');
+        } else {
+            fetchInteractions();
+        }
+        setActiveMenu(null);
     };
 
     const handleDelete = () => {
@@ -196,7 +260,7 @@ export function LeadDetails() {
                                 <Phone className="text-primary" size={18} />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Telefone</p>
-                                    <p className="text-sm text-gray-200">{client.phone || 'N/A'}</p>
+                                    <p className="text-sm text-foreground">{client.phone || 'N/A'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-4 bg-secondary rounded-2xl border border-border">
@@ -324,12 +388,40 @@ export function LeadDetails() {
                                                     <p className="text-[10px] text-gray-500 font-medium">{new Date(interaction.date).toLocaleDateString('pt-PT')}</p>
                                                 </div>
                                             </div>
-                                            {interaction.location && (
-                                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary px-2 py-1 rounded-md border border-border">
-                                                    <MapPin size={10} />
-                                                    {interaction.location}
+                                            <div className="flex items-center gap-2">
+                                                {interaction.location && (
+                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary px-2 py-1 rounded-md border border-border">
+                                                        <MapPin size={10} />
+                                                        {interaction.location}
+                                                    </div>
+                                                )}
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setActiveMenu(activeMenu === interaction.id ? null : interaction.id)}
+                                                        className="p-1.5 hover:bg-secondary rounded-lg transition-colors"
+                                                    >
+                                                        <MoreVertical size={14} className="text-gray-400" />
+                                                    </button>
+                                                    {activeMenu === interaction.id && (
+                                                        <div className="absolute right-0 top-8 bg-white border border-border rounded-xl shadow-lg py-1 z-10 min-w-[120px]">
+                                                            <button
+                                                                onClick={() => handleEditInteraction(interaction)}
+                                                                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-foreground hover:bg-secondary transition-colors"
+                                                            >
+                                                                <Edit2 size={12} />
+                                                                Editar
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteInteraction(interaction.id)}
+                                                                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"
+                                                            >
+                                                                <Trash2 size={12} />
+                                                                Apagar
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
                                         <p className="text-muted-foreground text-sm leading-relaxed">{interaction.description}</p>
                                     </motion.div>
@@ -353,7 +445,7 @@ export function LeadDetails() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setShowInteractionModal(false)}
+                            onClick={() => { setShowInteractionModal(false); setEditingInteraction(null); }}
                             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         />
                         <motion.div
@@ -362,7 +454,7 @@ export function LeadDetails() {
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="relative bg-white border border-border w-full max-w-md rounded-3xl overflow-hidden shadow-2xl p-8 space-y-6"
                         >
-                            <h3 className="text-xl font-bold text-foreground">Registar Interação</h3>
+                            <h3 className="text-xl font-bold text-foreground">{editingInteraction ? 'Editar Interação' : 'Registar Interação'}</h3>
 
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
@@ -423,13 +515,13 @@ export function LeadDetails() {
 
                             <div className="flex gap-4 pt-4">
                                 <button
-                                    onClick={() => setShowInteractionModal(false)}
+                                    onClick={() => { setShowInteractionModal(false); setEditingInteraction(null); setNewInteraction({ title: '', description: '', location: '', type: 'note', date: new Date().toISOString().split('T')[0] }); }}
                                     className="flex-1 py-4 text-muted-foreground font-bold hover:text-foreground transition-colors"
                                 >
                                     CANCELAR
                                 </button>
                                 <button
-                                    onClick={handleAddInteraction}
+                                    onClick={editingInteraction ? handleUpdateInteraction : handleAddInteraction}
                                     className="flex-1 py-4 bg-primary text-primary-foreground font-bold rounded-2xl hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-95"
                                 >
                                     GUARDAR

@@ -1,4 +1,4 @@
-import { Building2, Users, Clock, LogIn, CheckCircle2 } from 'lucide-react';
+import { Building2, Users, Clock, LogIn, CheckCircle2, Edit } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -11,10 +11,11 @@ interface LeadCardProps {
   lead: LeadSandbox;
   onQuickLog: (lead: LeadSandbox) => void;
   onValidate: (leadId: string) => void;
+  onEdit?: (lead: LeadSandbox) => void;
   onNavigate: (leadId: string) => void;
 }
 
-export function LeadCard({ lead, onQuickLog, onValidate, onNavigate }: LeadCardProps) {
+export function LeadCard({ lead, onQuickLog, onValidate, onEdit, onNavigate }: LeadCardProps) {
   const initials = lead.name
     .split(' ')
     .map(n => n[0])
@@ -72,6 +73,20 @@ export function LeadCard({ lead, onQuickLog, onValidate, onNavigate }: LeadCardP
       </div>
 
       <div className="flex gap-2">
+        {onEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(lead);
+            }}
+            title="Editar Lead"
+          >
+            <Edit size={14} />
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"

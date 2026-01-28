@@ -18,6 +18,13 @@
    - ✅ Todas as funções corrigidas com `SET search_path = public`
    - ✅ Avisos de segurança resolvidos
 
+4. **Migration 026** - Correção de search_path mutável (NOVO)
+   - ✅ Função `trigger_process_receipt()` corrigida
+   - ✅ Função `aprovar_lead()` corrigida
+   - ✅ Função `atualizar_timestamp_transacoes()` corrigida
+   - ✅ Função `convert_sandbox_lead_to_client()` corrigida
+   - ✅ Todas as funções agora têm `SET search_path = public, pg_temp` para segurança
+
 ### Verificações Realizadas:
 
 - ✅ Todas as 4 funções RPC existem e estão funcionais
@@ -79,11 +86,38 @@
    - ❌ **Allow anonymous sign-ins**: **DESATIVAR**
    - ⚠️ **Confirm email**: **DESATIVAR** (para Google OAuth)
 
-### 5. Ativar Leaked Password Protection (Recomendado)
+### 5. Ativar Leaked Password Protection (CRÍTICO - Segurança)
 
-1. Ir em: **Authentication** > **Settings** > **Password Protection**
-2. Ativar: **"Leaked password protection"**
-3. Isto previne uso de passwords comprometidas (HaveIBeenPwned)
+**⚠️ IMPORTANTE:** Esta configuração previne que utilizadores usem senhas que foram comprometidas em vazamentos de dados conhecidos (HaveIBeenPwned).
+
+#### Passos:
+
+1. **Aceder ao Dashboard:**
+   - URL: https://supabase.com/dashboard/project/ozjafmkfabewxoyibirq/auth/settings
+   - Ou navegar: **Authentication** > **Settings** > **Password Protection**
+
+2. **Habilitar Proteção:**
+   - Procurar a seção **"Password Security"** ou **"Leaked Password Protection"**
+   - Ativar o toggle **"Check passwords against HaveIBeenPwned database"**
+   - Salvar as alterações
+
+3. **Como Funciona:**
+   - Quando um utilizador tenta criar ou alterar uma senha, o Supabase verifica se a senha aparece na base de dados do HaveIBeenPwned
+   - Se a senha foi comprometida, o sistema bloqueia o uso e retorna um erro
+   - A verificação é feita de forma segura (usando hash parcial, não a senha completa)
+
+4. **Benefícios:**
+   - ✅ Previne uso de senhas conhecidamente comprometidas
+   - ✅ Melhora a segurança geral do sistema
+   - ✅ Reduz risco de contas comprometidas
+   - ✅ Sem custo adicional (serviço gratuito do HaveIBeenPwned)
+
+5. **Nota Técnica:**
+   - Esta verificação é feita via API do HaveIBeenPwned
+   - O Supabase usa o método k-anonymity para proteger a privacidade
+   - Apenas um hash parcial da senha é enviado, nunca a senha completa
+
+**Documentação oficial:** https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 ## 📋 Checklist de Configuração
 
@@ -101,7 +135,7 @@
 - [ ] Configurar Site URL
 - [ ] Desativar signup público
 - [ ] Ativar manual linking
-- [ ] (Opcional) Ativar leaked password protection
+- [ ] **Ativar leaked password protection** (Recomendado para segurança)
 
 ## 🧪 Testar Após Configuração
 

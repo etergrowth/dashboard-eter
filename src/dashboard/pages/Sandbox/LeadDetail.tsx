@@ -1,31 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Mail, 
-  Phone, 
-  Linkedin, 
-  MapPin, 
-  Copy, 
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  Linkedin,
+  MapPin,
+  Copy,
   CheckCircle2,
   XCircle,
   Trash2,
   Calendar,
-  Clock
+  Clock,
+  Send
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { useSandboxLead, useUpdateSandboxLead, useConvertLeadToClient, useUpdateScratchpad } from '../../hooks/useSandboxLeads';
 import { useSandboxActivities, useCreateSandboxActivity } from '../../hooks/useSandboxActivities';
 import { BANTProgressCard } from '../../components/sandbox/BANTProgressCard';
 import { ActivityTimeline } from '../../components/sandbox/ActivityTimeline';
 import { QuickLogModal } from '../../components/sandbox/QuickLogModal';
+import { EmailPreviewModal } from '../../components/sandbox/EmailPreviewModal';
 import { StatusBadge } from '../../components/sandbox/StatusBadge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { LoadingState } from '../../components/sections';
 import { useDebouncedCallback } from '../../../hooks/useDebounce';
+import { getEmailApresentacaoHtml } from '../../../lib/email/gmail';
+import { supabase } from '../../../lib/supabase';
 
 export function LeadDetail() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +45,8 @@ export function LeadDetail() {
   const [scratchpadNotes, setScratchpadNotes] = useState('');
   const [showQuickLog, setShowQuickLog] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   useEffect(() => {
     if (lead) {
@@ -101,6 +108,61 @@ export function LeadDetail() {
     navigator.clipboard.writeText(value);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleSendEmail = async () => {
+    if (!lead?.email || !id) {
+      toast.error('Email ou ID da lead não encontrado');
+      return;
+    }
+
+    setIsSendingEmail(true);
+    
+    try {
+      // Chamar Edge Function do Supabase
+      const { data, error } = await supabase.functions.invoke('send-email-apresentacao', {
+        body: {
+          lead_id: id,
+          lead_name: lead.name,
+          lead_email: lead.email,
+        },
+      });
+
+      if (error) {
+        console.error('Erro ao chamar Edge Function:', error);
+        throw new Error(error.message || 'Erro ao enviar email');
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Falha ao enviar email');
+      }
+
+      // Sucesso - a Edge Function já criou a atividade e atualizou o status
+      toast.success('Email enviado com sucesso!');
+      setShowEmailPreview(false);
+      
+      // Invalidar queries para atualizar a UI
+      // As queries serão atualizadas automaticamente via invalidation na Edge Function
+      
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      // Mensagens de erro mais específicas
+      if (errorMessage.includes('Gmail não configurado') || errorMessage.includes('GMAIL')) {
+        toast.error('Gmail não configurado. Verifique as variáveis de ambiente na Edge Function.');
+      } else if (errorMessage.includes('autenticação') || errorMessage.includes('token')) {
+        toast.error('Erro de autenticação Gmail. Verifique as credenciais.');
+      } else if (errorMessage.includes('Email inválido')) {
+        toast.error('Email inválido. Verifique o endereço de email.');
+      } else if (errorMessage.includes('Lead não encontrada')) {
+        toast.error('Lead não encontrada ou sem permissão.');
+      } else {
+        toast.error(`Erro ao enviar email: ${errorMessage}`);
+      }
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   if (isLoading) {
@@ -263,21 +325,32 @@ export function LeadDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
               {lead.email && (
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-secondary/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Mail size={18} className="text-muted-foreground" />
-                    <span className="text-sm">{lead.email}</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-secondary/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Mail size={18} className="text-muted-foreground" />
+                      <span className="text-sm">{lead.email}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => handleCopy('email', lead.email)}
+                    >
+                      {copiedField === 'email' ? (
+                        <CheckCircle2 size={16} className="text-green-500" />
+                      ) : (
+                        <Copy size={16} />
+                      )}
+                    </Button>
                   </div>
                   <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => handleCopy('email', lead.email)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setShowEmailPreview(true)}
                   >
-                    {copiedField === 'email' ? (
-                      <CheckCircle2 size={16} className="text-green-500" />
-                    ) : (
-                      <Copy size={16} />
-                    )}
+                    <Send size={16} className="mr-2" />
+                    Enviar E-mail de Apresentação
                   </Button>
                 </div>
               )}
@@ -357,6 +430,20 @@ export function LeadDetail() {
           leadId={id}
           open={showQuickLog}
           onClose={() => setShowQuickLog(false)}
+        />
+      )}
+
+      {/* Email Preview Modal */}
+      {lead.email && (
+        <EmailPreviewModal
+          open={showEmailPreview}
+          onClose={() => setShowEmailPreview(false)}
+          onSend={handleSendEmail}
+          isSending={isSendingEmail}
+          recipientEmail={lead.email}
+          recipientName={lead.name}
+          subject="Apresentação Eter Growth"
+          htmlContent={getEmailApresentacaoHtml(lead.name)}
         />
       )}
     </motion.div>
